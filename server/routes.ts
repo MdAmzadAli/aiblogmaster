@@ -1,0 +1,266 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
+import { blogScheduler } from "./services/scheduler";
+import { 
+  generateBlogPost, 
+  analyzeSEO, 
+  generateSEOSuggestions,
+  createOptimizedPost 
+} from "./services/gemini";
+import { insertPostSchema, insertAutomationSettingsSchema } from "@shared/schema";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize authentication
+  await setupAuth(app);
+
+  // Initialize automated posting scheduler
+  await blogScheduler.initializeScheduler();
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Public blog routes
+  app.get("/api/posts", async (req, res) => {
+    try {
+      const { limit, category } = req.query;
+      const posts = await storage.getPublishedPosts(Number(limit) || 10);
+      
+      let filteredPosts = posts;
+      if (category && category !== "all") {
+        filteredPosts = posts.filter(post => 
+          post.category.toLowerCase() === String(category).toLowerCase()
+        );
+      }
+      
+      res.json(filteredPosts);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      res.status(500).json({ message: "Failed to fetch posts" });
+    }
+  });
+
+  app.get("/api/posts/featured", async (req, res) => {
+    try {
+      const featuredPost = await storage.getFeaturedPost();
+      res.json(featuredPost);
+    } catch (error) {
+      console.error("Error fetching featured post:", error);
+      res.status(500).json({ message: "Failed to fetch featured post" });
+    }
+  });
+
+  app.get("/api/posts/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const post = await storage.getPostBySlug(slug);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      // Record view for published posts
+      if (post.status === "published") {
+        await storage.recordPostView(post.id, true); // Simplified - assume all views are unique for now
+      }
+
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching post:", error);
+      res.status(500).json({ message: "Failed to fetch post" });
+    }
+  });
+
+  // Protected admin routes
+  app.get("/api/admin/posts", isAuthenticated, async (req, res) => {
+    try {
+      const { status, limit } = req.query;
+      const posts = await storage.getPosts(Number(limit) || 50, String(status) || undefined);
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching admin posts:", error);
+      res.status(500).json({ message: "Failed to fetch posts" });
+    }
+  });
+
+  app.post("/api/admin/posts", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertPostSchema.parse(req.body);
+      const post = await storage.createPost(validatedData);
+      res.json(post);
+    } catch (error) {
+      console.error("Error creating post:", error);
+      res.status(500).json({ message: "Failed to create post" });
+    }
+  });
+
+  app.put("/api/admin/posts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const validatedData = insertPostSchema.partial().parse(req.body);
+      
+      // Set publishedAt when publishing
+      if (validatedData.status === "published" && !validatedData.publishedAt) {
+        validatedData.publishedAt = new Date();
+      }
+      
+      const post = await storage.updatePost(id, validatedData);
+      res.json(post);
+    } catch (error) {
+      console.error("Error updating post:", error);
+      res.status(500).json({ message: "Failed to update post" });
+    }
+  });
+
+  app.delete("/api/admin/posts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      await storage.deletePost(id);
+      res.json({ message: "Post deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      res.status(500).json({ message: "Failed to delete post" });
+    }
+  });
+
+  // AI content generation routes
+  app.post("/api/admin/generate-post", isAuthenticated, async (req, res) => {
+    try {
+      const { keywords, contentType, wordCount, category } = req.body;
+      
+      const post = await createOptimizedPost(
+        keywords || [],
+        contentType || "how-to",
+        wordCount || 1200,
+        category || "general"
+      );
+      
+      const createdPost = await storage.createPost(post);
+      res.json(createdPost);
+    } catch (error) {
+      console.error("Error generating post:", error);
+      res.status(500).json({ message: "Failed to generate post" });
+    }
+  });
+
+  app.post("/api/admin/analyze-seo", isAuthenticated, async (req, res) => {
+    try {
+      const { title, content, metaDescription, keywords } = req.body;
+      
+      if (!title || !content) {
+        return res.status(400).json({ message: "Title and content are required" });
+      }
+      
+      const analysis = await analyzeSEO(title, content, metaDescription, keywords || []);
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error analyzing SEO:", error);
+      res.status(500).json({ message: "Failed to analyze SEO" });
+    }
+  });
+
+  app.post("/api/admin/seo-suggestions", isAuthenticated, async (req, res) => {
+    try {
+      const { content, keywords } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ message: "Content is required" });
+      }
+      
+      const suggestions = await generateSEOSuggestions(content, keywords || []);
+      res.json({ suggestions });
+    } catch (error) {
+      console.error("Error generating SEO suggestions:", error);
+      res.status(500).json({ message: "Failed to generate SEO suggestions" });
+    }
+  });
+
+  // Analytics routes
+  app.get("/api/admin/analytics/summary", isAuthenticated, async (req, res) => {
+    try {
+      const summary = await storage.getAnalyticsSummary();
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching analytics summary:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  app.get("/api/admin/analytics/posts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const postId = Number(req.params.id);
+      const analytics = await storage.getPostAnalytics(postId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching post analytics:", error);
+      res.status(500).json({ message: "Failed to fetch post analytics" });
+    }
+  });
+
+  // Automation settings routes
+  app.get("/api/admin/automation", isAuthenticated, async (req, res) => {
+    try {
+      const settings = await storage.getAutomationSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching automation settings:", error);
+      res.status(500).json({ message: "Failed to fetch automation settings" });
+    }
+  });
+
+  app.put("/api/admin/automation", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertAutomationSettingsSchema.partial().parse(req.body);
+      const settings = await storage.updateAutomationSettings(validatedData);
+      
+      // Update scheduler with new settings
+      await blogScheduler.updateSchedule(settings);
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating automation settings:", error);
+      res.status(500).json({ message: "Failed to update automation settings" });
+    }
+  });
+
+  // Search route
+  app.get("/api/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      
+      if (!q) {
+        return res.json([]);
+      }
+      
+      const posts = await storage.getPublishedPosts(50);
+      const searchTerm = String(q).toLowerCase();
+      
+      const filteredPosts = posts.filter(post => 
+        post.title.toLowerCase().includes(searchTerm) ||
+        post.excerpt.toLowerCase().includes(searchTerm) ||
+        post.content.toLowerCase().includes(searchTerm) ||
+        (post.keywords && post.keywords.some(keyword => 
+          keyword.toLowerCase().includes(searchTerm)
+        ))
+      );
+      
+      res.json(filteredPosts);
+    } catch (error) {
+      console.error("Error searching posts:", error);
+      res.status(500).json({ message: "Failed to search posts" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
