@@ -549,7 +549,7 @@ function PostAutomation() {
     mutationFn: async (data: any) => {
       return await apiRequest("POST", "/api/admin/generate-post", data);
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Success",
         description: `AI post "${data.title}" generated successfully!`,
