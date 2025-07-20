@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Switch as WouterSwitch, Route, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import AnalyticsChart from "@/components/analytics-chart";
 import { 
   Settings, 
   Bot, 
@@ -32,17 +35,17 @@ import {
   PlusCircle,
   ChevronLeft,
   ChevronRight,
-  Save
+  Save,
+  Sparkles,
+  TrendingUp,
+  XCircle,
+  AlertCircle
 } from "lucide-react";
-
-// Import remaining page components  
-import PostEditor from "./post-editor";
-import AnalyticsPage from "./analytics";
 
 export default function AdminLayout() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
-  const [location] = useLocation();
+  const [activeSection, setActiveSection] = useState("dashboard");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -75,13 +78,32 @@ export default function AdminLayout() {
   }
 
   const sidebarItems = [
-    { href: "/admin", icon: Home, label: "Dashboard", exact: true },
-    { href: "/admin/automation", icon: Bot, label: "Post Automation" },
-    { href: "/admin/approval", icon: CheckCircle, label: "Pending Approval" },
-    { href: "/admin/seo", icon: Target, label: "SEO Analyzer" },
-    { href: "/admin/analytics", icon: BarChart3, label: "Analytics" },
-    { href: "/admin/settings", icon: Settings, label: "Settings" },
+    { id: "dashboard", icon: Home, label: "Dashboard" },
+    { id: "automation", icon: Bot, label: "Post Automation" },
+    { id: "approval", icon: CheckCircle, label: "Pending Approval" },
+    { id: "seo", icon: Target, label: "SEO Analyzer" },
+    { id: "analytics", icon: BarChart3, label: "Analytics" },
+    { id: "settings", icon: Settings, label: "Settings" },
   ];
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case "dashboard":
+        return <AdminDashboard />;
+      case "automation":
+        return <PostAutomation />;
+      case "approval":
+        return <PendingApproval />;
+      case "seo":
+        return <SEOAnalyzer />;
+      case "analytics":
+        return <AnalyticsSection />;
+      case "settings":
+        return <AdminSettings />;
+      default:
+        return <AdminDashboard />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -90,11 +112,9 @@ export default function AdminLayout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/">
-                <h1 className="text-2xl font-bold text-gray-900 hover:text-blue-600 cursor-pointer">
-                  AI Blog Admin
-                </h1>
-              </Link>
+              <h1 className="text-2xl font-bold text-gray-900">
+                AI Blog Admin
+              </h1>
               <span className="ml-4 text-sm text-gray-500">Management Dashboard</span>
             </div>
             <div className="flex items-center space-x-4">
@@ -102,11 +122,13 @@ export default function AdminLayout() {
                 <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
                 <span className="text-sm text-gray-600">AI Active</span>
               </div>
-              <Link href="/">
-                <Button variant="outline" className="text-blue-600 hover:text-blue-800">
-                  View Blog
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.href = "/"}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                View Blog
+              </Button>
               <Button 
                 variant="outline" 
                 onClick={() => window.location.href = "/api/logout"}
@@ -126,21 +148,21 @@ export default function AdminLayout() {
             <div className="bg-white rounded-lg shadow-sm border p-4">
               <nav className="space-y-2">
                 {sidebarItems.map((item) => {
-                  const isActive = item.exact 
-                    ? location === item.href 
-                    : location.startsWith(item.href);
+                  const isActive = activeSection === item.id;
                   
                   return (
-                    <Link key={item.href} href={item.href}>
-                      <div className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                    <div 
+                      key={item.id}
+                      onClick={() => setActiveSection(item.id)}
+                      className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
                         isActive 
                           ? 'bg-blue-100 text-blue-700' 
                           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                      }`}>
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.label}</span>
-                      </div>
-                    </Link>
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                    </div>
                   );
                 })}
               </nav>
@@ -149,19 +171,7 @@ export default function AdminLayout() {
 
           {/* Main Content */}
           <div className="flex-1">
-            <WouterSwitch>
-              <Route path="/admin" component={AdminDashboard} />
-              <Route path="/admin/automation" component={PostAutomation} />
-              <Route path="/admin/approval" component={PendingApproval} />
-              <Route path="/admin/seo" component={SEOAnalyzer} />
-              <Route path="/admin/posts/edit/:id" component={PostEditor} />
-              <Route path="/admin/posts/new" component={PostEditor} />
-              <Route path="/admin/analytics" component={AnalyticsPage} />
-              <Route path="/admin/settings" component={AdminSettings} />
-              <Route>
-                <AdminDashboard />
-              </Route>
-            </WouterSwitch>
+            {renderContent()}
           </div>
         </div>
       </div>
@@ -216,6 +226,27 @@ function AdminDashboard() {
       toast({
         title: "Error",
         description: "Failed to delete post.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update post status mutation
+  const updatePostMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      return await apiRequest("PUT", `/api/admin/posts/${id}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Post updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/posts"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update post.",
         variant: "destructive",
       });
     },
@@ -1293,6 +1324,274 @@ function AdminSettings() {
           {saveSettingsMutation.isPending ? "Saving..." : "Save Settings"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+// Analytics Section Component
+function AnalyticsSection() {
+  const { isAuthenticated } = useAuth();
+
+  // Fetch analytics data
+  const { data: analytics = {}, isLoading } = useQuery({
+    queryKey: ["/api/admin/analytics"],
+    queryFn: async () => {
+      const response = await fetch("/api/admin/analytics");
+      if (!response.ok) throw new Error("Failed to fetch analytics");
+      return response.json();
+    },
+    enabled: isAuthenticated,
+  });
+
+  const { data: posts = [] } = useQuery({
+    queryKey: ["/api/admin/posts"],
+    queryFn: async () => {
+      const response = await fetch("/api/admin/posts");
+      if (!response.ok) throw new Error("Failed to fetch posts");
+      return response.json();
+    },
+    enabled: isAuthenticated,
+  });
+
+  // Calculate metrics
+  const totalPosts = posts.length;
+  const aiGeneratedPosts = posts.filter((p: any) => p.isAiGenerated).length;
+  const publishedPosts = posts.filter((p: any) => p.status === "published").length;
+  const draftPosts = posts.filter((p: any) => p.status === "draft").length;
+  const avgSeoScore = posts.length > 0 
+    ? Math.round(posts.reduce((sum: number, p: any) => sum + (p.seoScore || 0), 0) / posts.length)
+    : 0;
+
+  const chartData = analytics.chartData || [];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
+        <p className="text-gray-600 mt-1">Track your blog performance and AI automation metrics</p>
+      </div>
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <FileText className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-500">Total Posts</p>
+                <p className="text-2xl font-bold text-gray-900">{totalPosts}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-emerald-100 rounded-lg">
+                <Eye className="w-6 h-6 text-emerald-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-500">Total Views</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {analytics.totalViews?.toLocaleString() || "0"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <Bot className="w-6 h-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-500">AI Generated</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {totalPosts > 0 ? Math.round((aiGeneratedPosts / totalPosts) * 100) : 0}%
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <Target className="w-6 h-6 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-500">Avg SEO Score</p>
+                <p className="text-2xl font-bold text-gray-900">{avgSeoScore}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Content Status Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <BarChart3 className="w-5 h-5 mr-2" />
+              Content Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Published Posts</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full" 
+                      style={{ width: totalPosts > 0 ? `${(publishedPosts / totalPosts) * 100}%` : '0%' }}
+                    ></div>
+                  </div>
+                  <span className="text-sm font-medium">{publishedPosts}</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Draft Posts</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-yellow-500 h-2 rounded-full" 
+                      style={{ width: totalPosts > 0 ? `${(draftPosts / totalPosts) * 100}%` : '0%' }}
+                    ></div>
+                  </div>
+                  <span className="text-sm font-medium">{draftPosts}</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">AI Generated</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-purple-500 h-2 rounded-full" 
+                      style={{ width: totalPosts > 0 ? `${(aiGeneratedPosts / totalPosts) * 100}%` : '0%' }}
+                    ></div>
+                  </div>
+                  <span className="text-sm font-medium">{aiGeneratedPosts}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <TrendingUp className="w-5 h-5 mr-2" />
+              Performance Metrics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Unique Views</span>
+                  <span className="text-sm font-medium">{analytics.uniqueViews?.toLocaleString() || "0"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Average SEO Score</span>
+                  <span className="text-sm font-medium">{avgSeoScore}/100</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Total Posts</span>
+                  <span className="text-sm font-medium">{totalPosts}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Published This Month</span>
+                  <span className="text-sm font-medium">
+                    {posts.filter((p: any) => {
+                      const postDate = new Date(p.createdAt);
+                      const now = new Date();
+                      return postDate.getMonth() === now.getMonth() && 
+                             postDate.getFullYear() === now.getFullYear() &&
+                             p.status === "published";
+                    }).length}
+                  </span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Views Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <BarChart3 className="w-5 h-5 mr-2" />
+            Views Over Time
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {chartData.length > 0 ? (
+            <AnalyticsChart data={chartData} />
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>No analytics data available yet</p>
+              <p className="text-sm">Data will appear as your blog gets more views</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Top Performing Posts */}
+      {posts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Sparkles className="w-5 h-5 mr-2" />
+              Top Performing Posts
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {posts
+                .filter((p: any) => p.status === "published")
+                .sort((a: any, b: any) => (b.viewCount || 0) - (a.viewCount || 0))
+                .slice(0, 5)
+                .map((post: any, index: number) => (
+                  <div key={post.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 rounded-full text-xs font-medium">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900 text-sm">{post.title}</h4>
+                        <p className="text-xs text-gray-500">{post.category}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-900">{post.viewCount || 0} views</div>
+                      {post.seoScore && (
+                        <div className="text-xs text-gray-500">SEO: {post.seoScore}/100</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
