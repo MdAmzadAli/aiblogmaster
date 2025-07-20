@@ -43,39 +43,8 @@ import {
 } from "lucide-react";
 
 export default function AdminLayout() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState("dashboard");
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, authLoading, toast]);
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   const sidebarItems = [
     { id: "dashboard", icon: Home, label: "Dashboard" },
@@ -181,7 +150,6 @@ export default function AdminLayout() {
 
 // Dashboard Component with Search and Pagination
 function AdminDashboard() {
-  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -196,7 +164,7 @@ function AdminDashboard() {
       if (!response.ok) throw new Error("Failed to fetch posts");
       return response.json();
     },
-    enabled: isAuthenticated,
+    enabled: true,
   });
 
   // Fetch analytics summary
@@ -207,7 +175,7 @@ function AdminDashboard() {
       if (!response.ok) throw new Error("Failed to fetch analytics");
       return response.json();
     },
-    enabled: isAuthenticated,
+    enabled: true,
   });
 
   // Delete post mutation
@@ -554,7 +522,6 @@ function AdminDashboard() {
 
 // Post Automation Component
 function PostAutomation() {
-  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [formData, setFormData] = useState({
@@ -572,7 +539,7 @@ function PostAutomation() {
       if (!response.ok) throw new Error("Failed to fetch settings");
       return response.json();
     },
-    enabled: isAuthenticated,
+    enabled: true,
   });
 
   // Generate post mutation
@@ -756,7 +723,6 @@ function PostAutomation() {
 
 // Pending Approval Component
 function PendingApproval() {
-  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   // Fetch draft posts (pending approval)
@@ -767,7 +733,7 @@ function PendingApproval() {
       if (!response.ok) throw new Error("Failed to fetch draft posts");
       return response.json();
     },
-    enabled: isAuthenticated,
+    enabled: true,
   });
 
   // Approve post mutation
@@ -1073,7 +1039,6 @@ function SEOAnalyzer() {
 
 // Admin Settings Component (from admin-settings.tsx)
 function AdminSettings() {
-  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   
   const [settings, setSettings] = useState({
@@ -1095,7 +1060,7 @@ function AdminSettings() {
       if (!response.ok) throw new Error("Failed to fetch settings");
       return response.json();
     },
-    enabled: isAuthenticated,
+    enabled: true,
   });
 
   // Load existing settings
@@ -1330,7 +1295,6 @@ function AdminSettings() {
 
 // Analytics Section Component
 function AnalyticsSection() {
-  const { isAuthenticated } = useAuth();
 
   // Fetch analytics data
   const { data: analytics = {}, isLoading } = useQuery({
@@ -1340,7 +1304,7 @@ function AnalyticsSection() {
       if (!response.ok) throw new Error("Failed to fetch analytics");
       return response.json();
     },
-    enabled: isAuthenticated,
+    enabled: true,
   });
 
   const { data: posts = [] } = useQuery({
@@ -1350,7 +1314,7 @@ function AnalyticsSection() {
       if (!response.ok) throw new Error("Failed to fetch posts");
       return response.json();
     },
-    enabled: isAuthenticated,
+    enabled: true,
   });
 
   // Calculate metrics
@@ -1543,7 +1507,7 @@ function AnalyticsSection() {
         </CardHeader>
         <CardContent>
           {chartData.length > 0 ? (
-            <AnalyticsChart data={chartData} />
+            <AnalyticsChart />
           ) : (
             <div className="text-center py-8 text-gray-500">
               <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
