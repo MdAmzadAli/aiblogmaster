@@ -76,7 +76,8 @@ export default function PostEditor() {
     mutationFn: async (data: any) => {
       const endpoint = isEditing ? `/api/admin/posts/${postId}` : "/api/admin/posts";
       const method = isEditing ? "PUT" : "POST";
-      return await apiRequest(method, endpoint, data);
+      const response = await apiRequest(method, endpoint, data);
+      return await response.json();
     },
     onSuccess: (data) => {
       toast({
