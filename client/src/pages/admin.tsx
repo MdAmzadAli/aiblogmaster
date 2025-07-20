@@ -32,8 +32,7 @@ import {
   PlusCircle,
   ChevronLeft,
   ChevronRight,
-  Save,
-  Textarea
+  Save
 } from "lucide-react";
 
 // Import remaining page components  

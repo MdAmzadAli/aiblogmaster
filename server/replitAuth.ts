@@ -31,14 +31,18 @@ export function getSession() {
     ttl: sessionTtl,
     tableName: "sessions",
   });
+  
+  // Use SESSION_SECRET from environment or generate a default for development
+  const sessionSecret = process.env.SESSION_SECRET || 'dev-session-secret-change-in-production';
+  
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: sessionSecret,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production', // Only secure in production
       maxAge: sessionTtl,
     },
   });
