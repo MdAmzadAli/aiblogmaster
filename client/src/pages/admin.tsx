@@ -39,12 +39,25 @@ import {
   Sparkles,
   TrendingUp,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  ExternalLink
 } from "lucide-react";
+import RichEditor from "@/components/rich-editor";
 
 export default function AdminLayout() {
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState("dashboard");
+
+  // Set up real-time updates using polling
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Invalidate queries to trigger refetch for real-time updates
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/posts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
+    }, 10000); // Update every 10 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   const sidebarItems = [
     { id: "dashboard", icon: Home, label: "Dashboard" },
@@ -789,69 +802,12 @@ function PendingApproval() {
           </Card>
         ) : (
           aiGeneratedDrafts.map((post: any) => (
-            <Card key={post.id} className="border-orange-200">
-              <CardHeader className="bg-orange-50">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center">
-                    <Clock className="w-5 h-5 mr-2 text-orange-600" />
-                    {post.title}
-                  </CardTitle>
-                  <Badge variant="outline" className="text-orange-600">
-                    <Bot className="w-3 h-3 mr-1" />
-                    AI Generated
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Excerpt:</h4>
-                    <p className="text-gray-600">{post.excerpt}</p>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Category:</span>
-                      <span className="ml-2 font-medium">{post.category}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">SEO Score:</span>
-                      <span className="ml-2 font-medium">{post.seoScore}/100</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Word Count:</span>
-                      <span className="ml-2 font-medium">~{post.content.split(' ').length}</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Keywords:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {post.keywords?.map((keyword: string, index: number) => (
-                        <Badge key={index} variant="secondary">{keyword}</Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-3 pt-4 border-t">
-                    <Link href={`/admin/posts/edit/${post.id}`}>
-                      <Button variant="outline">
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit Post
-                      </Button>
-                    </Link>
-                    <Button 
-                      onClick={() => approvePostMutation.mutate(post.id)}
-                      disabled={approvePostMutation.isPending}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Approve & Publish
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <PendingPostCard 
+              key={post.id} 
+              post={post} 
+              onApprove={() => approvePostMutation.mutate(post.id)}
+              isApproving={approvePostMutation.isPending}
+            />
           ))
         )}
       </div>
@@ -1557,5 +1513,339 @@ function AnalyticsSection() {
         </Card>
       )}
     </div>
+  );
+}
+
+// Enhanced Pending Post Card Component with Inline Editing
+function PendingPostCard({ post, onApprove, isApproving }: {
+  post: any;
+  onApprove: () => void;
+  isApproving: boolean;
+}) {
+  const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isViewingPost, setIsViewingPost] = useState(false);
+  const [editedPost, setEditedPost] = useState({
+    title: post.title,
+    content: post.content,
+    excerpt: post.excerpt,
+    metaDescription: post.metaDescription || "",
+    keywords: post.keywords?.join(", ") || "",
+    category: post.category,
+    featuredImage: post.featuredImage || "",
+  });
+
+  // Save edited post mutation
+  const saveEditMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("PUT", `/api/admin/posts/${post.id}`, {
+        ...data,
+        keywords: data.keywords.split(",").map((k: string) => k.trim()).filter(Boolean),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Post updated successfully!",
+      });
+      setIsEditing(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/posts"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update post.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSaveEdit = () => {
+    saveEditMutation.mutate(editedPost);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedPost({
+      title: post.title,
+      content: post.content,
+      excerpt: post.excerpt,
+      metaDescription: post.metaDescription || "",
+      keywords: post.keywords?.join(", ") || "",
+      category: post.category,
+      featuredImage: post.featuredImage || "",
+    });
+    setIsEditing(false);
+  };
+
+  if (isViewingPost) {
+    return (
+      <Card className="border-blue-200">
+        <CardHeader className="bg-blue-50">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Eye className="w-5 h-5 mr-2 text-blue-600" />
+              Post Preview
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsViewingPost(false)}
+            >
+              Back to List
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6">
+          <article className="max-w-none prose prose-sm">
+            <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
+            {post.featuredImage && (
+              <img
+                src={post.featuredImage}
+                alt={post.title}
+                className="w-full h-64 object-cover rounded-lg mb-4"
+              />
+            )}
+            <div
+              className="text-gray-700 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
+          </article>
+          <div className="mt-6 pt-6 border-t flex space-x-3">
+            <Button
+              onClick={() => {
+                setIsViewingPost(false);
+                setIsEditing(true);
+              }}
+              variant="outline"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Post
+            </Button>
+            <Button
+              onClick={onApprove}
+              disabled={isApproving}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Approve & Publish
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isEditing) {
+    return (
+      <Card className="border-purple-200">
+        <CardHeader className="bg-purple-50">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Edit className="w-5 h-5 mr-2 text-purple-600" />
+              Editing: {post.title}
+            </CardTitle>
+            <div className="flex space-x-2">
+              <Button
+                onClick={handleSaveEdit}
+                disabled={saveEditMutation.isPending}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {saveEditMutation.isPending ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleCancelEdit}
+                variant="outline"
+                size="sm"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 space-y-6">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Title
+            </label>
+            <Input
+              value={editedPost.title}
+              onChange={(e) => setEditedPost({ ...editedPost, title: e.target.value })}
+              placeholder="Post title..."
+            />
+          </div>
+
+          {/* Rich Text Editor for Content */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Content
+            </label>
+            <RichEditor
+              title={editedPost.title}
+              content={editedPost.content}
+              onChange={(content) => setEditedPost({ ...editedPost, content })}
+              onTitleChange={(title) => setEditedPost({ ...editedPost, title })}
+            />
+          </div>
+
+          {/* Excerpt */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Excerpt
+            </label>
+            <Textarea
+              value={editedPost.excerpt}
+              onChange={(e) => setEditedPost({ ...editedPost, excerpt: e.target.value })}
+              placeholder="Brief description..."
+              rows={3}
+            />
+          </div>
+
+          {/* SEO Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Meta Description
+              </label>
+              <Input
+                value={editedPost.metaDescription}
+                onChange={(e) => setEditedPost({ ...editedPost, metaDescription: e.target.value })}
+                placeholder="SEO meta description..."
+                maxLength={160}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Featured Image URL
+              </label>
+              <Input
+                value={editedPost.featuredImage}
+                onChange={(e) => setEditedPost({ ...editedPost, featuredImage: e.target.value })}
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Keywords
+              </label>
+              <Input
+                value={editedPost.keywords}
+                onChange={(e) => setEditedPost({ ...editedPost, keywords: e.target.value })}
+                placeholder="keyword1, keyword2, keyword3"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
+              <Select
+                value={editedPost.category}
+                onValueChange={(value) => setEditedPost({ ...editedPost, category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Technology">Technology</SelectItem>
+                  <SelectItem value="AI">AI</SelectItem>
+                  <SelectItem value="Business">Business</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="Tutorial">Tutorial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-orange-200">
+      <CardHeader className="bg-orange-50">
+        <div className="flex items-center justify-between">
+          <CardTitle 
+            className="flex items-center cursor-pointer hover:text-orange-700 transition-colors"
+            onClick={() => setIsViewingPost(true)}
+          >
+            <Clock className="w-5 h-5 mr-2 text-orange-600" />
+            {post.title}
+            <ExternalLink className="w-4 h-4 ml-2 text-orange-500" />
+          </CardTitle>
+          <Badge variant="outline" className="text-orange-600">
+            <Bot className="w-3 h-3 mr-1" />
+            AI Generated
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Excerpt:</h4>
+            <p className="text-gray-600">{post.excerpt}</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="text-gray-500">Category:</span>
+              <span className="ml-2 font-medium">{post.category}</span>
+            </div>
+            <div>
+              <span className="text-gray-500">SEO Score:</span>
+              <span className="ml-2 font-medium">{post.seoScore}/100</span>
+            </div>
+            <div>
+              <span className="text-gray-500">Word Count:</span>
+              <span className="ml-2 font-medium">~{post.content.split(' ').length}</span>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Keywords:</h4>
+            <div className="flex flex-wrap gap-2">
+              {post.keywords?.map((keyword: string, index: number) => (
+                <Badge key={index} variant="secondary">{keyword}</Badge>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3 pt-4 border-t">
+            <Button
+              onClick={() => setIsEditing(true)}
+              variant="outline"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Post
+            </Button>
+            <Button
+              onClick={() => setIsViewingPost(true)}
+              variant="outline"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Preview
+            </Button>
+            <Button 
+              onClick={onApprove}
+              disabled={isApproving}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Approve & Publish
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
