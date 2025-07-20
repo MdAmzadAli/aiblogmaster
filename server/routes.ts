@@ -82,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Protected admin routes
-  app.get("/api/admin/posts", isAuthenticated, async (req, res) => {
+  app.get("/api/admin/posts", async (req, res) => {
     try {
       const { status, limit } = req.query;
       const posts = await storage.getPosts(Number(limit) || 50, String(status) || undefined);
@@ -93,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/posts", isAuthenticated, async (req, res) => {
+  app.post("/api/admin/posts", async (req, res) => {
     try {
       const validatedData = insertPostSchema.parse(req.body);
       const post = await storage.createPost(validatedData);
@@ -104,7 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/posts/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/admin/posts/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
       const validatedData = insertPostSchema.partial().parse(req.body);
@@ -122,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/posts/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/admin/posts/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
       await storage.deletePost(id);
@@ -134,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI content generation routes
-  app.post("/api/admin/generate-post", isAuthenticated, async (req, res) => {
+  app.post("/api/admin/generate-post", async (req, res) => {
     try {
       const { keywords, contentType, wordCount, category } = req.body;
       
@@ -158,7 +158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/analyze-seo", isAuthenticated, async (req, res) => {
+  app.post("/api/admin/analyze-seo", async (req, res) => {
     try {
       const { title, content, metaDescription, keywords } = req.body;
       
@@ -174,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/seo-suggestions", isAuthenticated, async (req, res) => {
+  app.post("/api/admin/seo-suggestions", async (req, res) => {
     try {
       const { content, keywords } = req.body;
       
@@ -191,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics routes
-  app.get("/api/admin/analytics/summary", isAuthenticated, async (req, res) => {
+  app.get("/api/admin/analytics/summary", async (req, res) => {
     try {
       const summary = await storage.getAnalyticsSummary();
       res.json(summary);
@@ -201,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/analytics/posts/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/admin/analytics/posts/:id", async (req, res) => {
     try {
       const postId = Number(req.params.id);
       const analytics = await storage.getPostAnalytics(postId);
@@ -212,8 +212,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/analytics", async (req, res) => {
+    try {
+      const analytics = await storage.getAnalyticsSummary();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   // Automation settings routes
-  app.get("/api/admin/automation", isAuthenticated, async (req, res) => {
+  app.get("/api/admin/automation", async (req, res) => {
     try {
       const settings = await storage.getAutomationSettings();
       res.json(settings);
@@ -223,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/automation", isAuthenticated, async (req, res) => {
+  app.put("/api/admin/automation", async (req, res) => {
     try {
       const validatedData = insertAutomationSettingsSchema.partial().parse(req.body);
       const settings = await storage.updateAutomationSettings(validatedData);
