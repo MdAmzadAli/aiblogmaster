@@ -1,6 +1,7 @@
 import * as cron from "node-cron";
 import { storage } from "../storage";
 import { createOptimizedPost } from "./gemini";
+import { sendApprovalEmailForPost } from "./approvalService";
 
 class BlogScheduler {
   private jobs: Map<string, cron.ScheduledTask> = new Map();
@@ -33,6 +34,10 @@ class BlogScheduler {
     
     let cronExpression = '';
     switch (settings.frequency) {
+      case 'twice-daily':
+        // 10:00 AM and 4:00 PM daily
+        cronExpression = `${minute} ${hour},16 * * *`;
+        break;
       case 'daily':
         cronExpression = `${minute} ${hour} * * *`;
         break;
@@ -45,7 +50,7 @@ class BlogScheduler {
         cronExpression = `${minute} ${hour} 1 * *`;
         break;
       default:
-        cronExpression = `${minute} ${hour} * * 1`; // Default to weekly
+        cronExpression = `${minute} ${hour},16 * * *`; // Default to twice daily
     }
 
     const task = cron.schedule(cronExpression, async () => {
@@ -83,17 +88,24 @@ class BlogScheduler {
         this.selectRandomCategory(settings.categories)
       );
 
-      // Schedule for immediate publishing or set a future date
-      const scheduledAt = new Date();
-      scheduledAt.setMinutes(scheduledAt.getMinutes() + 5); // Publish 5 minutes from now
-
+      // Create post as draft for approval
       const createdPost = await storage.createPost({
         ...post,
-        status: "scheduled",
-        scheduledAt,
+        status: "draft", // Always create as draft for approval
+        scheduledAt: new Date()
       });
 
-      console.log(`Generated and scheduled post: ${createdPost.title}`);
+      // Send approval email if admin email is set
+      if (settings.adminEmail) {
+        const emailSent = await sendApprovalEmailForPost(createdPost, settings.adminEmail);
+        if (emailSent) {
+          console.log(`Generated post and sent approval email: ${createdPost.title}`);
+        } else {
+          console.log(`Generated post but failed to send email: ${createdPost.title}`);
+        }
+      } else {
+        console.log(`Generated post (no email configured): ${createdPost.title}`);
+      }
     } catch (error) {
       console.error("Failed to generate automated post:", error);
     }

@@ -145,7 +145,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category || "general"
       );
       
-      const createdPost = await storage.createPost(post);
+      // Create as draft for immediate editing/approval
+      const createdPost = await storage.createPost({
+        ...post,
+        status: "draft"
+      });
+      
       res.json(createdPost);
     } catch (error) {
       console.error("Error generating post:", error);
@@ -230,6 +235,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating automation settings:", error);
       res.status(500).json({ message: "Failed to update automation settings" });
+    }
+  });
+
+  // Email approval routes
+  app.get("/api/admin/approve/:id", async (req, res) => {
+    try {
+      const postId = Number(req.params.id);
+      const { token } = req.query;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Approval token required" });
+      }
+
+      // Use approval service to validate and approve
+      const { approveAndPublishPost } = await import('./services/approvalService');
+      const post = await approveAndPublishPost(postId, String(token));
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found or token invalid" });
+      }
+
+      // Redirect to admin with success message
+      res.redirect('/admin/posts?approved=true');
+    } catch (error) {
+      console.error("Error approving post:", error);
+      res.status(500).json({ message: "Failed to approve post" });
     }
   });
 

@@ -70,13 +70,23 @@ export const postAnalytics = pgTable("post_analytics", {
 export const automationSettings = pgTable("automation_settings", {
   id: serial("id").primaryKey(),
   isEnabled: boolean("is_enabled").default(true),
-  frequency: varchar("frequency", { length: 20 }).default("weekly"), // daily, weekly, monthly
+  frequency: varchar("frequency", { length: 20 }).default("twice-daily"), // twice-daily, daily, weekly, monthly
   scheduledTime: varchar("scheduled_time", { length: 10 }).default("10:00"), // HH:MM format
   targetKeywords: text("target_keywords").array(),
   contentType: varchar("content_type", { length: 50 }).default("how-to"),
   wordCount: integer("word_count").default(1200),
   categories: text("categories").array(),
+  adminEmail: varchar("admin_email"),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Approval tokens table for email workflow
+export const approvalTokens = pgTable("approval_tokens", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").references(() => posts.id).notNull(),
+  token: varchar("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Insert schemas
@@ -90,6 +100,15 @@ export const insertAutomationSettingsSchema = createInsertSchema(automationSetti
   id: true,
   updatedAt: true,
 });
+
+export const insertApprovalTokenSchema = createInsertSchema(approvalTokens).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types for new tables
+export type ApprovalToken = typeof approvalTokens.$inferSelect;
+export type InsertApprovalToken = z.infer<typeof insertApprovalTokenSchema>;
 
 export const upsertUserSchema = createInsertSchema(users).pick({
   id: true,

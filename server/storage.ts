@@ -28,6 +28,7 @@ export interface IStorage {
   deletePost(id: number): Promise<void>;
   getPublishedPosts(limit?: number): Promise<Post[]>;
   getFeaturedPost(): Promise<Post | undefined>;
+  getAllPosts(): Promise<Post[]>;
   
   // Analytics operations
   getPostAnalytics(postId: number): Promise<PostAnalytics[]>;
@@ -107,6 +108,10 @@ export class DatabaseStorage implements IStorage {
 
   async deletePost(id: number): Promise<void> {
     await db.delete(posts).where(eq(posts.id, id));
+  }
+
+  async getAllPosts(): Promise<Post[]> {
+    return await db.select().from(posts).orderBy(desc(posts.createdAt));
   }
 
   async getPublishedPosts(limit = 10): Promise<Post[]> {

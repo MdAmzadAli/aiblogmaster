@@ -65,22 +65,14 @@ export default function Navigation() {
               </div>
             </form>
 
-            {/* Admin Button */}
-            {isAuthenticated ? (
-              <Link href="/automation">
+            {/* Show Admin button only for authenticated users */}
+            {isAuthenticated && (
+              <Link href="/admin">
                 <Button className="bg-blue-600 text-white hover:bg-blue-700 transition-colors">
                   <Settings className="w-4 h-4 mr-2" />
                   Admin
                 </Button>
               </Link>
-            ) : (
-              <Button 
-                onClick={() => window.location.href = "/api/login"}
-                className="bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Admin
-              </Button>
             )}
 
             {/* Mobile menu button */}

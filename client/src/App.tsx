@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
-import Automation from "@/pages/automation";
+import AdminLayout from "@/pages/admin";
 import Post from "@/pages/post";
 
 function Router() {
@@ -15,18 +15,9 @@ function Router() {
 
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/post/:slug" component={Post} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/automation" component={Automation} />
-          <Route path="/post/:slug" component={Post} />
-        </>
-      )}
+      <Route path="/" component={isAuthenticated ? Home : Landing} />
+      <Route path="/admin" nest component={AdminLayout} />
+      <Route path="/post/:slug" component={Post} />
       <Route component={NotFound} />
     </Switch>
   );
