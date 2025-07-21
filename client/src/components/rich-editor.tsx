@@ -39,54 +39,72 @@ interface EditorContentProps {
 
 const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(({ content, onChange, onKeyDown }, ref) => {
   const [isComposing, setIsComposing] = useState(false);
-  const [lastContent, setLastContent] = useState(content);
+  const [isInitialized, setIsInitialized] = useState(false);
   const innerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<string>(content);
+  const isUpdatingRef = useRef<boolean>(false);
 
   // Combine refs
   const combinedRef = useCallback((node: HTMLDivElement) => {
-    if (innerRef) {
-      innerRef.current = node;
-    }
+    innerRef.current = node;
     if (typeof ref === 'function') {
       ref(node);
     } else if (ref) {
-      ref.current = node;
+      (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
     }
-  }, [ref]);
+    
+    // Initialize content only once when the element is created
+    if (node && !isInitialized) {
+      node.innerHTML = content;
+      contentRef.current = content;
+      setIsInitialized(true);
+    }
+  }, [ref, content, isInitialized]);
 
+  // Only update content if it changed from external source (not from user typing)
   useEffect(() => {
-    // Only update DOM content if it actually changed from outside
-    // and we're not currently typing (to avoid cursor jumps)
-    if (innerRef.current && content !== lastContent && !isComposing && document.activeElement !== innerRef.current) {
+    if (innerRef.current && isInitialized && content !== contentRef.current && !isUpdatingRef.current && !isComposing) {
+      // This is an external content change, update the DOM
       const selection = window.getSelection();
       let savedRange: Range | null = null;
+      let needsRestore = false;
       
-      // Save selection if the element has focus
+      // Save selection if this element has focus
       if (document.activeElement === innerRef.current && selection && selection.rangeCount > 0) {
         savedRange = selection.getRangeAt(0).cloneRange();
+        needsRestore = true;
       }
       
       innerRef.current.innerHTML = content;
-      setLastContent(content);
+      contentRef.current = content;
       
-      // Restore selection if we had one
-      if (savedRange && document.activeElement === innerRef.current) {
+      // Restore selection
+      if (needsRestore && savedRange) {
         try {
           selection?.removeAllRanges();
           selection?.addRange(savedRange);
         } catch (e) {
-          // Range might be invalid after content change, ignore
+          // Range might be invalid, place cursor at end
+          const range = document.createRange();
+          range.selectNodeContents(innerRef.current);
+          range.collapse(false);
+          selection?.removeAllRanges();
+          selection?.addRange(range);
         }
       }
     }
-  }, [content, lastContent, isComposing]);
+  }, [content, isInitialized, isComposing]);
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    if (!isComposing) {
-      const target = e.target as HTMLDivElement;
-      const newContent = target.innerHTML;
-      setLastContent(newContent);
+    if (!isComposing && innerRef.current) {
+      isUpdatingRef.current = true;
+      const newContent = innerRef.current.innerHTML;
+      contentRef.current = newContent;
       onChange(newContent);
+      // Reset the flag after a short delay to allow React to process the change
+      setTimeout(() => {
+        isUpdatingRef.current = false;
+      }, 10);
     }
   };
 
@@ -96,10 +114,15 @@ const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(({ content,
 
   const handleCompositionEnd = (e: React.CompositionEvent<HTMLDivElement>) => {
     setIsComposing(false);
-    const target = e.target as HTMLDivElement;
-    const newContent = target.innerHTML;
-    setLastContent(newContent);
-    onChange(newContent);
+    if (innerRef.current) {
+      isUpdatingRef.current = true;
+      const newContent = innerRef.current.innerHTML;
+      contentRef.current = newContent;
+      onChange(newContent);
+      setTimeout(() => {
+        isUpdatingRef.current = false;
+      }, 10);
+    }
   };
 
   return (
@@ -116,7 +139,6 @@ const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(({ content,
         lineHeight: '1.6'
       }}
       suppressContentEditableWarning={true}
-      dangerouslySetInnerHTML={{ __html: content }}
     />
   );
 });
@@ -273,12 +295,7 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
     }
   }, [saveSelection]);
 
-  // Handle content changes while preserving cursor position
-  const handleContentChange = useCallback((e: any) => {
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
-    }
-  }, [onChange]);
+  // This is now handled by EditorContent component
 
   // Close floating toolbar when clicking outside
   const handleDocumentClick = useCallback((e: MouseEvent) => {
