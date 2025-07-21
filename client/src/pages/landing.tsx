@@ -26,11 +26,26 @@ export default function Landing() {
   });
 
   const { data: posts = [], isLoading: postsLoading } = useQuery<Post[]>({
-    queryKey: ["/api/posts", { limit: 9, category: selectedCategory }],
+    queryKey: ["/api/posts", selectedCategory, 9],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        limit: "9",
+        ...(selectedCategory !== "all" && { category: selectedCategory })
+      });
+      const response = await fetch(`/api/posts?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch posts');
+      return response.json();
+    },
   });
 
   const { data: searchResults = [], isLoading: searchLoading } = useQuery<Post[]>({
-    queryKey: ["/api/search", { q: searchQuery }],
+    queryKey: ["/api/search", searchQuery],
+    queryFn: async () => {
+      const params = new URLSearchParams({ q: searchQuery });
+      const response = await fetch(`/api/search?${params}`);
+      if (!response.ok) throw new Error('Failed to search posts');
+      return response.json();
+    },
     enabled: searchQuery.length > 2,
   });
 
