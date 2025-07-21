@@ -392,43 +392,7 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
       }
     } else {
       // For all other commands (bold, italic, underline, etc.)
-      // Save current selection, execute command, then restore selection
-      const selection = window.getSelection();
-      let savedRange: Range | null = null;
-      
-      if (selection && selection.rangeCount > 0) {
-        savedRange = selection.getRangeAt(0).cloneRange();
-      }
-      
       document.execCommand(command, false, value);
-      
-      // Restore selection to keep text selected after formatting
-      setTimeout(() => {
-        if (savedRange) {
-          try {
-            const selection = window.getSelection();
-            if (selection) {
-              selection.removeAllRanges();
-              selection.addRange(savedRange);
-              saveSelection();
-              checkActiveFormats();
-              
-              // Update floating toolbar position if visible
-              if (floatingToolbar.show) {
-                const rect = savedRange.getBoundingClientRect();
-                setFloatingToolbar({
-                  show: true,
-                  x: Math.max(10, rect.left + (rect.width / 2) - 200),
-                  y: Math.max(10, rect.top - 60)
-                });
-              }
-            }
-          } catch (e) {
-            // Range might be invalid, try to reselect similar area
-            console.log('Selection restoration failed for command:', command);
-          }
-        }
-      }, 10);
     }
     
     if (editorRef.current) {
@@ -462,6 +426,50 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
       setActiveFormats(new Set());
     }
   }, [saveSelection, checkActiveFormats]);
+
+  // Function to maintain toolbar after formatting by checking if text is still selected
+  const maintainToolbarAfterFormatting = useCallback(() => {
+    // Give DOM time to update after formatting command
+    setTimeout(() => {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        
+        // If we still have a valid selection in our editor
+        if (!range.collapsed && editorRef.current?.contains(range.commonAncestorContainer)) {
+          const rect = range.getBoundingClientRect();
+          
+          // Force toolbar to stay visible
+          setFloatingToolbar({
+            show: true,
+            x: Math.max(10, rect.left + (rect.width / 2) - 200),
+            y: Math.max(10, rect.top - 60)
+          });
+          
+          // Update saved selection
+          setSavedSelection(range.cloneRange());
+          checkActiveFormats();
+        } else if (savedSelection) {
+          // Try to restore previous selection if current one was lost
+          try {
+            selection.removeAllRanges();
+            selection.addRange(savedSelection);
+            
+            const rect = savedSelection.getBoundingClientRect();
+            setFloatingToolbar({
+              show: true,
+              x: Math.max(10, rect.left + (rect.width / 2) - 200),
+              y: Math.max(10, rect.top - 60)
+            });
+            checkActiveFormats();
+          } catch (e) {
+            // If restoration fails, hide toolbar
+            setFloatingToolbar({ show: false, x: 0, y: 0 });
+          }
+        }
+      }
+    }, 30); // Increased delay to ensure DOM updates complete
+  }, [checkActiveFormats, savedSelection]);
 
   // This is now handled by EditorContent component
 
@@ -601,43 +609,12 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
                 e.preventDefault();
                 e.stopPropagation();
                 
-                // Store current selection before command execution
-                const currentSelection = window.getSelection();
-                const currentRange = currentSelection && currentSelection.rangeCount > 0 ? currentSelection.getRangeAt(0) : null;
-                
                 executeCommand(btn.command, btn.value);
                 
-                // After command execution, restore and maintain selection
+                // Maintain toolbar visibility after formatting
                 setTimeout(() => {
-                  const selection = window.getSelection();
-                  if (selection && currentRange) {
-                    try {
-                      // Try to restore the selection
-                      selection.removeAllRanges();
-                      selection.addRange(currentRange);
-                      
-                      // Force toolbar to stay visible
-                      const rect = currentRange.getBoundingClientRect();
-                      setFloatingToolbar({
-                        show: true,
-                        x: Math.max(10, rect.left + (rect.width / 2) - 200),
-                        y: Math.max(10, rect.top - 60)
-                      });
-                      
-                      // Update saved selection and check formats
-                      setSavedSelection(currentRange.cloneRange());
-                      checkActiveFormats();
-                    } catch (e) {
-                      // If range restoration fails, try to maintain any existing selection
-                      if (selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
-                        handleSelection();
-                      }
-                    }
-                  } else if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
-                    // Fallback: handle any existing selection
-                    handleSelection();
-                  }
-                }, 10);
+                  maintainToolbarAfterFormatting();
+                }, 20);
               }}
               title={btn.title}
               className={`p-2 h-8 w-8 ${
