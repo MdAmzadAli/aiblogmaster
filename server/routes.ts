@@ -152,9 +152,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(createdPost);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating post:", error);
-      res.status(500).json({ message: "Failed to generate post" });
+      
+      // Provide specific error messages for different types of failures
+      if (error.message.includes('quota exceeded')) {
+        return res.status(429).json({ 
+          message: "AI service quota exceeded. Please try again later or check your billing settings.",
+          type: "quota_exceeded"
+        });
+      }
+      
+      if (error.message.includes('Authentication') || error.message.includes('API key')) {
+        return res.status(401).json({ 
+          message: "AI service authentication failed. Please check your API configuration.",
+          type: "auth_error"
+        });
+      }
+      
+      res.status(500).json({ 
+        message: error.message || "Failed to generate post. Please try again.",
+        type: "generation_error"
+      });
     }
   });
 

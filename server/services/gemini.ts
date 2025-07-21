@@ -62,7 +62,7 @@ Respond with JSON in this exact format:
 }`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
+      model: "gemini-1.5-pro",
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -98,9 +98,20 @@ Respond with JSON in this exact format:
     }
 
     return generatedContent;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating blog post:", error);
-    throw new Error(`Failed to generate blog post: ${error}`);
+    
+    // Check for quota exceeded error
+    if (error.status === 429 || (error.message && error.message.includes('quota'))) {
+      throw new Error("Gemini API quota exceeded. Please check your billing details or try again later.");
+    }
+    
+    // Check for other API errors
+    if (error.status >= 400 && error.status < 500) {
+      throw new Error(`Gemini API error: ${error.message || 'Authentication or request error'}`);
+    }
+    
+    throw new Error(`Failed to generate blog post: ${error.message || error}`);
   }
 }
 
@@ -138,7 +149,7 @@ Respond with JSON in this format:
 }`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
+      model: "gemini-1.5-pro",
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -168,9 +179,20 @@ Respond with JSON in this format:
     }
 
     return JSON.parse(rawJson);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error analyzing SEO:", error);
-    throw new Error(`Failed to analyze SEO: ${error}`);
+    
+    // Check for quota exceeded error
+    if (error.status === 429 || (error.message && error.message.includes('quota'))) {
+      throw new Error("Gemini API quota exceeded. Please check your billing details or try again later.");
+    }
+    
+    // Check for other API errors
+    if (error.status >= 400 && error.status < 500) {
+      throw new Error(`Gemini API error: ${error.message || 'Authentication or request error'}`);
+    }
+    
+    throw new Error(`Failed to analyze SEO: ${error.message || error}`);
   }
 }
 
@@ -197,7 +219,7 @@ Provide specific, actionable suggestions in JSON format:
 }`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -221,9 +243,20 @@ Provide specific, actionable suggestions in JSON format:
 
     const result = JSON.parse(rawJson);
     return result.suggestions || [];
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating SEO suggestions:", error);
-    throw new Error(`Failed to generate SEO suggestions: ${error}`);
+    
+    // Check for quota exceeded error
+    if (error.status === 429 || (error.message && error.message.includes('quota'))) {
+      throw new Error("Gemini API quota exceeded. Please check your billing details or try again later.");
+    }
+    
+    // Check for other API errors
+    if (error.status >= 400 && error.status < 500) {
+      throw new Error(`Gemini API error: ${error.message || 'Authentication or request error'}`);
+    }
+    
+    throw new Error(`Failed to generate SEO suggestions: ${error.message || error}`);
   }
 }
 
