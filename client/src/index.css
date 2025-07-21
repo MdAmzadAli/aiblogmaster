@@ -140,6 +140,39 @@
   .status-scheduled {
     @apply bg-blue-500;
   }
+
+  /* Rich Editor Inline Heading Styles */
+  .inline-heading {
+    @apply inline;
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    vertical-align: baseline;
+  }
+
+  .inline-heading.h1 {
+    font-size: 2rem !important;
+    font-weight: bold !important;
+    line-height: 1.2 !important;
+  }
+
+  .inline-heading.h2 {
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+    line-height: 1.3 !important;
+  }
+
+  .inline-heading.h3 {
+    font-size: 1.25rem !important;
+    font-weight: bold !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Ensure floating toolbar stays visible */
+  .floating-toolbar {
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+  }
 }
 
 /* Custom scrollbar */

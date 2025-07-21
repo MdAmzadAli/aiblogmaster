@@ -234,28 +234,52 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
     restoreSelection();
     
     if (command === 'formatBlock' && value && ['h1', 'h2', 'h3'].includes(value)) {
-      // Custom heading implementation to handle selected text only
+      // Custom heading implementation that preserves inline flow
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
         if (!range.collapsed) {
           const selectedText = range.toString();
           if (selectedText.trim()) {
-            const headingElement = document.createElement(value);
+            // Create an inline heading element that doesn't break text flow
+            const headingElement = document.createElement('span');
             headingElement.textContent = selectedText;
-            headingElement.style.margin = '16px 0';
-            headingElement.style.fontWeight = 'bold';
+            headingElement.className = `inline-heading ${value}`;
+            
+            // Apply appropriate styling based on heading level
+            const headingStyles = {
+              h1: { fontSize: '2rem', fontWeight: 'bold', lineHeight: '1.2' },
+              h2: { fontSize: '1.5rem', fontWeight: 'bold', lineHeight: '1.3' },
+              h3: { fontSize: '1.25rem', fontWeight: 'bold', lineHeight: '1.4' }
+            };
+            
+            const styles = headingStyles[value as keyof typeof headingStyles];
+            Object.assign(headingElement.style, styles);
+            
+            // Store the original selection for restoration
+            const savedRange = range.cloneRange();
             
             range.deleteContents();
             range.insertNode(headingElement);
             
-            // Keep the heading selected after creation
+            // Create a new range that selects the heading element
             const newRange = document.createRange();
             newRange.selectNodeContents(headingElement);
             selection.removeAllRanges();
             selection.addRange(newRange);
             
+            // Update saved selection and maintain floating toolbar
             saveSelection();
+            
+            // Force toolbar to stay visible with updated position
+            setTimeout(() => {
+              const rect = headingElement.getBoundingClientRect();
+              setFloatingToolbar({
+                show: true,
+                x: Math.max(10, rect.left + (rect.width / 2) - 200),
+                y: Math.max(10, rect.top - 60)
+              });
+            }, 10);
           }
         }
       }
@@ -358,7 +382,7 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
     }
   }, [restoreSelection, onChange, saveSelection]);
 
-  // Handle text selection and show floating toolbar
+  // Handle text selection and show floating toolbar with persistence
   const handleSelection = useCallback(() => {
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
@@ -366,33 +390,57 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
       
       if (!range.collapsed && editorRef.current?.contains(range.commonAncestorContainer)) {
         const rect = range.getBoundingClientRect();
-        const editorRect = editorRef.current.getBoundingClientRect();
         
-        setFloatingToolbar({
+        // Only update position if toolbar is not already showing or position changed significantly
+        const newX = Math.max(10, rect.left + (rect.width / 2) - 200);
+        const newY = Math.max(10, rect.top - 60);
+        
+        setFloatingToolbar(prev => ({
           show: true,
-          x: Math.max(10, rect.left + (rect.width / 2) - 200), // Center toolbar above selection
-          y: Math.max(10, rect.top - 60) // Position above selection
-        });
+          x: newX,
+          y: newY
+        }));
         
         saveSelection();
-      } else {
+      } else if (!floatingToolbar.show) {
+        // Only hide if toolbar wasn't already showing (preserve after formatting)
         setFloatingToolbar({ show: false, x: 0, y: 0 });
       }
-    } else {
+    } else if (!floatingToolbar.show) {
+      // Only hide if toolbar wasn't already showing
       setFloatingToolbar({ show: false, x: 0, y: 0 });
     }
-  }, [saveSelection]);
+  }, [saveSelection, floatingToolbar.show]);
 
   // This is now handled by EditorContent component
 
-  // Close floating toolbar when clicking outside
+  // Close floating toolbar when clicking outside, but preserve selection better
   const handleDocumentClick = useCallback((e: MouseEvent) => {
     const target = e.target as Element;
-    if (target && !target.closest('.floating-toolbar') && !editorRef.current?.contains(target as Node)) {
+    
+    // Check if click is on toolbar or editor
+    const isToolbarClick = target.closest('.floating-toolbar');
+    const isEditorClick = editorRef.current?.contains(target as Node);
+    
+    if (!isToolbarClick && !isEditorClick) {
+      // Only hide toolbar if clicking completely outside editor and toolbar
       setFloatingToolbar({ show: false, x: 0, y: 0 });
       setSavedSelection(null);
+    } else if (isEditorClick && !target.closest('.floating-toolbar')) {
+      // If clicking in editor but not on toolbar, update selection but keep toolbar if text is selected
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+          // Text is still selected, keep toolbar visible
+          handleSelection();
+        } else {
+          // No text selected, hide toolbar
+          setFloatingToolbar({ show: false, x: 0, y: 0 });
+          setSavedSelection(null);
+        }
+      }, 10);
     }
-  }, []);
+  }, [handleSelection]);
 
   useEffect(() => {
     document.addEventListener('mouseup', handleSelection);
