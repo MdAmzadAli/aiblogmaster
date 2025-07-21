@@ -11,7 +11,10 @@ export interface EmailParams {
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
     const emailData = {
-      sender: { email: params.from, name: "AI Blog Platform" },
+      sender: { 
+        email: process.env.BREVO_FROM_EMAIL || params.from, 
+        name: process.env.BREVO_FROM_NAME || "AI Blog Platform" 
+      },
       to: [{ email: params.to }],
       subject: params.subject,
       htmlContent: params.htmlContent,
@@ -111,7 +114,7 @@ Links expire in 24 hours.
 
   return await sendEmail({
     to: adminEmail,
-    from: process.env.FROM_EMAIL || 'noreply@aiblogs.com',
+    from: process.env.BREVO_FROM_EMAIL || 'noreply@aiblogs.com',
     subject: `📝 New AI Post Ready: "${post.title}"`,
     htmlContent,
     textContent
