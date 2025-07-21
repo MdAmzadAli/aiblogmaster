@@ -359,12 +359,10 @@ function AdminDashboard() {
                 </SelectContent>
               </Select>
             </div>
-            <Link href="/post-editor">
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                New Post
-              </Button>
-            </Link>
+            <Button onClick={() => window.location.href = '/post-editor'}>
+              <Plus className="w-4 h-4 mr-2" />
+              New Post
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -389,12 +387,10 @@ function AdminDashboard() {
                 }
               </p>
               {!searchTerm && statusFilter === "all" && (
-                <Link href="/post-editor">
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Your First Post
-                  </Button>
-                </Link>
+                <Button onClick={() => window.location.href = '/post-editor'}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Post
+                </Button>
               )}
             </CardContent>
           </Card>
@@ -406,10 +402,11 @@ function AdminDashboard() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600">
-                          <Link href={`/post-editor?edit=${post.id}`}>
-                            {post.title}
-                          </Link>
+                        <h3 
+                          className="text-lg font-semibold text-gray-900 hover:text-blue-600 cursor-pointer"
+                          onClick={() => window.location.href = `/post-editor?edit=${post.id}`}
+                        >
+                          {post.title}
                         </h3>
                         <Badge className={getStatusColor(post.status)}>
                           {post.status}
@@ -441,18 +438,24 @@ function AdminDashboard() {
                     
                     <div className="flex items-center space-x-2 ml-4">
                       {post.status === "published" && (
-                        <Link href={`/post/${post.slug}`}>
-                          <Button variant="ghost" size="sm" title="View Post">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </Link>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          title="View Post"
+                          onClick={() => window.open(`/post/${post.slug}`, '_blank')}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                       )}
                       
-                      <Link href={`/post-editor?edit=${post.id}`}>
-                        <Button variant="ghost" size="sm" title="Edit Post">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      </Link>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        title="Edit Post"
+                        onClick={() => window.location.href = `/post-editor?edit=${post.id}`}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
                       
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
