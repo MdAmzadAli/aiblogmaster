@@ -79,7 +79,7 @@ class BlogScheduler {
     this.jobs.set("publishing", task);
   }
 
-  private async generateAndSchedulePost(settings: any) {
+  async generateAndSchedulePost(settings: any) {
     try {
       const post = await createOptimizedPost(
         settings.targetKeywords || [],

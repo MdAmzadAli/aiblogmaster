@@ -318,6 +318,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manual trigger for testing automation
+  app.post("/api/admin/trigger-automation", async (req, res) => {
+    try {
+      const settings = await storage.getAutomationSettings();
+      if (!settings || !settings.isEnabled) {
+        return res.status(400).json({ message: "Automation not enabled" });
+      }
+
+      // Import scheduler methods
+      const { blogScheduler } = await import('./services/scheduler');
+      
+      // Manually trigger post generation
+      await blogScheduler.generateAndSchedulePost(settings);
+      
+      res.json({ message: "Automated post generation triggered successfully" });
+    } catch (error) {
+      console.error("Error triggering automation:", error);
+      res.status(500).json({ message: "Failed to trigger automation" });
+    }
+  });
+
   // Search route
   app.get("/api/search", async (req, res) => {
     try {
