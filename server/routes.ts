@@ -137,7 +137,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/posts", async (req, res) => {
     try {
+      const generateSlug = (title: string) => {
+        return title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      };
+
       const validatedData = insertPostSchema.parse(req.body);
+      
+      // Auto-generate slug if not provided
+      if (!validatedData.slug && validatedData.title) {
+        validatedData.slug = generateSlug(validatedData.title);
+      }
       
       // Ensure database constraints are respected
       if (validatedData.metaDescription && validatedData.metaDescription.length > 160) {

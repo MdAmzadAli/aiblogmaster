@@ -367,15 +367,15 @@ function AdminDashboard() {
         </CardContent>
       </Card>
 
-      {/* Posts List with Pagination */}
-      <div className="space-y-4">
-        {postsLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        ) : paginatedPosts.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
+      {/* Posts Table with Pagination */}
+      <Card>
+        <CardContent className="p-0">
+          {postsLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : paginatedPosts.length === 0 ? (
+            <div className="p-12 text-center">
               <div className="text-gray-400 mb-4">
                 <FileText className="w-12 h-12 mx-auto" />
               </div>
@@ -392,147 +392,151 @@ function AdminDashboard() {
                   Create Your First Post
                 </Button>
               )}
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {paginatedPosts.map((post: any) => (
-              <Card key={post.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 
-                          className="text-lg font-semibold text-gray-900 hover:text-blue-600 cursor-pointer"
-                          onClick={() => window.location.href = `/post-editor?edit=${post.id}`}
-                        >
-                          {post.title}
-                        </h3>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="text-left p-4 font-semibold text-gray-900">Post Title</th>
+                    <th className="text-left p-4 font-semibold text-gray-900">Status</th>
+                    <th className="text-left p-4 font-semibold text-gray-900">Category</th>
+                    <th className="text-left p-4 font-semibold text-gray-900">Views</th>
+                    <th className="text-left p-4 font-semibold text-gray-900">Date</th>
+                    <th className="text-center p-4 font-semibold text-gray-900">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedPosts.map((post: any, index: number) => (
+                    <tr key={post.id} className={`border-b hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}>
+                      <td className="p-4">
+                        <div className="flex items-center space-x-3">
+                          <div>
+                            <h3 
+                              className="font-medium text-gray-900 hover:text-blue-600 cursor-pointer"
+                              onClick={() => window.location.href = `/post-editor?edit=${post.id}`}
+                            >
+                              {post.title}
+                            </h3>
+                            {post.isAiGenerated && (
+                              <div className="flex items-center text-xs text-purple-600 mt-1">
+                                <Bot className="w-3 h-3 mr-1" />
+                                AI Generated
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
                         <Badge className={getStatusColor(post.status)}>
                           {post.status}
                         </Badge>
-                        {post.isAiGenerated && (
-                          <Badge variant="outline" className="text-purple-600">
-                            <Bot className="w-3 h-3 mr-1" />
-                            AI
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <p className="text-gray-600 mb-3 line-clamp-2">
-                        {post.excerpt}
-                      </p>
-                      
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {new Date(post.createdAt).toLocaleDateString()}
-                        </span>
-                        <span>Category: {post.category}</span>
-                        {post.seoScore && (
-                          <span>SEO Score: {post.seoScore}/100</span>
-                        )}
-                        <span>Views: {post.viewCount || 0}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 ml-4">
-                      {post.status === "published" && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          title="View Post"
-                          onClick={() => window.open(`/post/${post.slug}`, '_blank')}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      )}
-                      
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        title="Edit Post"
-                        onClick={() => window.location.href = `/post-editor?edit=${post.id}`}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" title="Delete Post" className="text-red-600 hover:text-red-700">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Post</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{post.title}"? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deletePostMutation.mutate(post.id)}
-                              className="bg-red-600 hover:bg-red-700"
+                      </td>
+                      <td className="p-4 text-gray-600">{post.category}</td>
+                      <td className="p-4 text-gray-600">{post.viewCount || 0}</td>
+                      <td className="p-4 text-gray-600">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center justify-center space-x-2">
+                          {post.status === "published" && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              title="View Post"
+                              onClick={() => window.open(`/post/${post.slug}`, '_blank')}
                             >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          )}
+                          
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            title="Edit Post"
+                            onClick={() => window.location.href = `/post-editor?edit=${post.id}`}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm" title="Delete Post" className="text-red-600 hover:text-red-700">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Post</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{post.title}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deletePostMutation.mutate(post.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-500">
-                  Showing {startIndex + 1} to {Math.min(startIndex + postsPerPage, filteredPosts.length)} of {filteredPosts.length} posts
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    Previous
-                  </Button>
-                  
-                  <div className="flex items-center space-x-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(page)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {page}
-                      </Button>
-                    ))}
-                  </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {/* Pagination */}
+      {!postsLoading && paginatedPosts.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-gray-500">
+            Showing {startIndex + 1} to {Math.min(startIndex + postsPerPage, filteredPosts.length)} of {filteredPosts.length} posts
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </Button>
+            
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(page)}
+                  className="w-8 h-8 p-0"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

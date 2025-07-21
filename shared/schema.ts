@@ -94,6 +94,8 @@ export const insertPostSchema = createInsertSchema(posts).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  slug: z.string().optional(), // Make slug optional as it can be auto-generated
 });
 
 export const insertAutomationSettingsSchema = createInsertSchema(automationSettings).omit({

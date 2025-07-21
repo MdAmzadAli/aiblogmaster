@@ -28,7 +28,7 @@ export default function PostEditor() {
   const { toast } = useToast();
   
   // Support both URL params (/post-editor/:id) and query params (/post-editor?edit=id)
-  const urlSearchParams = new URLSearchParams(location.split('?')[1] || '');
+  const urlSearchParams = new URLSearchParams(window.location.search);
   const editPostId = urlSearchParams.get('edit');
   const postId = params.id ? parseInt(params.id) : (editPostId ? parseInt(editPostId) : null);
   const isEditing = !!postId;
@@ -101,9 +101,20 @@ export default function PostEditor() {
     },
   });
 
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
   const handleSave = (status?: string) => {
+    const slug = generateSlug(post.title);
     const postData = {
       ...post,
+      slug,
       keywords: post.keywords.split(",").map(k => k.trim()).filter(Boolean),
       status: status || post.status,
       scheduledAt: post.scheduledAt ? new Date(post.scheduledAt) : null,
