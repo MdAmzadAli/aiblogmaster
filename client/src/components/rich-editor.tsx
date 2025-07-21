@@ -1,22 +1,21 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   Bold, 
   Italic, 
   Underline, 
-  Link, 
-  Image, 
   List, 
   ListOrdered,
-  Heading1,
-  Heading2,
-  Heading3,
+  Link,
+  Image,
   AlignLeft,
   AlignCenter,
-  AlignRight
+  AlignRight,
+  Heading1,
+  Heading2,
+  Heading3
 } from "lucide-react";
 
 interface RichEditorProps {
@@ -24,6 +23,12 @@ interface RichEditorProps {
   onChange: (content: string) => void;
   title: string;
   onTitleChange: (title: string) => void;
+}
+
+interface FloatingToolbarState {
+  show: boolean;
+  x: number;
+  y: number;
 }
 
 export default function RichEditor({ content, onChange, title, onTitleChange }: RichEditorProps) {
@@ -34,47 +39,206 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
   const [linkText, setLinkText] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imageAlt, setImageAlt] = useState("");
+  const [floatingToolbar, setFloatingToolbar] = useState<FloatingToolbarState>({
+    show: false,
+    x: 0,
+    y: 0
+  });
+  const [savedSelection, setSavedSelection] = useState<Range | null>(null);
 
-  const executeCommand = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
+  // Save and restore selection
+  const saveSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      setSavedSelection(range.cloneRange());
+      return range;
+    }
+    return null;
+  }, []);
+
+  const restoreSelection = useCallback(() => {
+    if (savedSelection) {
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(savedSelection);
+      }
+    }
+  }, [savedSelection]);
+
+  // Enhanced command execution that preserves selection
+  const executeCommand = useCallback((command: string, value?: string) => {
+    if (!editorRef.current) return;
+    
+    editorRef.current.focus();
+    restoreSelection();
+    
+    if (command === 'formatBlock' && value && ['h1', 'h2', 'h3'].includes(value)) {
+      // Custom heading implementation to handle selected text only
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (!range.collapsed) {
+          const selectedText = range.toString();
+          if (selectedText.trim()) {
+            const headingElement = document.createElement(value);
+            headingElement.textContent = selectedText;
+            headingElement.style.margin = '16px 0';
+            headingElement.style.fontWeight = 'bold';
+            
+            range.deleteContents();
+            range.insertNode(headingElement);
+            
+            // Place cursor after the heading
+            range.setStartAfter(headingElement);
+            range.setEndAfter(headingElement);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            saveSelection();
+          }
+        }
+      }
+    } else if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
+      // Enhanced list handling
+      document.execCommand(command, false, undefined);
+      saveSelection();
+    } else if (command.startsWith('justify')) {
+      // Enhanced alignment
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (!range.collapsed) {
+          const container = document.createElement('div');
+          container.style.textAlign = command.replace('justify', '').toLowerCase();
+          
+          try {
+            container.appendChild(range.extractContents());
+            range.insertNode(container);
+            
+            // Restore selection
+            const newRange = document.createRange();
+            newRange.selectNodeContents(container);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+            saveSelection();
+          } catch (e) {
+            // Fallback to document.execCommand
+            document.execCommand(command, false, undefined);
+          }
+        } else {
+          document.execCommand(command, false, undefined);
+        }
+      }
+    } else {
+      // Use standard execCommand for other operations
+      document.execCommand(command, false, value);
+      saveSelection();
+    }
+    
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
     }
-  };
+  }, [restoreSelection, onChange, saveSelection]);
 
-  const handleContentChange = () => {
+  // Handle text selection and show floating toolbar
+  const handleSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      
+      if (!range.collapsed && editorRef.current?.contains(range.commonAncestorContainer)) {
+        const rect = range.getBoundingClientRect();
+        const editorRect = editorRef.current.getBoundingClientRect();
+        
+        setFloatingToolbar({
+          show: true,
+          x: Math.max(10, rect.left + (rect.width / 2) - 200), // Center toolbar above selection
+          y: Math.max(10, rect.top - 60) // Position above selection
+        });
+        
+        saveSelection();
+      } else {
+        setFloatingToolbar({ show: false, x: 0, y: 0 });
+      }
+    } else {
+      setFloatingToolbar({ show: false, x: 0, y: 0 });
+    }
+  }, [saveSelection]);
+
+  // Handle content changes while preserving cursor position
+  const handleContentChange = useCallback((e: any) => {
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
     }
-  };
+  }, [onChange]);
+
+  // Close floating toolbar when clicking outside
+  const handleDocumentClick = useCallback((e: MouseEvent) => {
+    const target = e.target as Element;
+    if (target && !target.closest('.floating-toolbar') && !editorRef.current?.contains(target as Node)) {
+      setFloatingToolbar({ show: false, x: 0, y: 0 });
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('mouseup', handleSelection);
+    document.addEventListener('keyup', handleSelection);
+    document.addEventListener('click', handleDocumentClick);
+    
+    return () => {
+      document.removeEventListener('mouseup', handleSelection);
+      document.removeEventListener('keyup', handleSelection);
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [handleSelection, handleDocumentClick]);
 
   const insertLink = () => {
-    if (linkUrl && linkText) {
-      const linkHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
-      executeCommand('insertHTML', linkHtml);
+    if (linkUrl) {
+      restoreSelection();
+      const linkHTML = linkText 
+        ? `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: underline;">${linkText}</a>`
+        : `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: underline;">${linkUrl}</a>`;
+      
+      document.execCommand('insertHTML', false, linkHTML);
+      
+      if (editorRef.current) {
+        onChange(editorRef.current.innerHTML);
+      }
+      
       setLinkUrl("");
       setLinkText("");
       setShowLinkDialog(false);
+      editorRef.current?.focus();
     }
   };
 
   const insertImage = () => {
     if (imageUrl) {
-      const imgHtml = `<img src="${imageUrl}" alt="${imageAlt}" style="max-width: 100%; height: auto; margin: 10px 0;" />`;
-      executeCommand('insertHTML', imgHtml);
+      restoreSelection();
+      const imgHTML = `<div style="text-align: center; margin: 20px 0;"><img src="${imageUrl}" alt="${imageAlt || 'Image'}" style="max-width: 100%; height: auto; border-radius: 8px;" /></div>`;
+      
+      document.execCommand('insertHTML', false, imgHTML);
+      
+      if (editorRef.current) {
+        onChange(editorRef.current.innerHTML);
+      }
+      
       setImageUrl("");
       setImageAlt("");
       setShowImageDialog(false);
+      editorRef.current?.focus();
     }
   };
 
   const toolbarButtons = [
-    { icon: Heading1, command: 'formatBlock', value: 'h1', title: 'Heading 1' },
-    { icon: Heading2, command: 'formatBlock', value: 'h2', title: 'Heading 2' },
-    { icon: Heading3, command: 'formatBlock', value: 'h3', title: 'Heading 3' },
     { icon: Bold, command: 'bold', title: 'Bold' },
     { icon: Italic, command: 'italic', title: 'Italic' },
     { icon: Underline, command: 'underline', title: 'Underline' },
+    { icon: Heading1, command: 'formatBlock', value: 'h1', title: 'Heading 1' },
+    { icon: Heading2, command: 'formatBlock', value: 'h2', title: 'Heading 2' },
+    { icon: Heading3, command: 'formatBlock', value: 'h3', title: 'Heading 3' },
     { icon: List, command: 'insertUnorderedList', title: 'Bullet List' },
     { icon: ListOrdered, command: 'insertOrderedList', title: 'Numbered List' },
     { icon: AlignLeft, command: 'justifyLeft', title: 'Align Left' },
@@ -83,7 +247,7 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
       {/* Title Editor */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -97,9 +261,60 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
         />
       </div>
 
+      {/* Floating Toolbar */}
+      {floatingToolbar.show && (
+        <div 
+          className="floating-toolbar fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-2 flex gap-1"
+          style={{ 
+            left: `${floatingToolbar.x}px`, 
+            top: `${floatingToolbar.y}px`,
+            maxWidth: '400px'
+          }}
+        >
+          {toolbarButtons.map((btn, index) => (
+            <Button
+              key={index}
+              variant="ghost"
+              size="sm"
+              onClick={() => executeCommand(btn.command, btn.value)}
+              title={btn.title}
+              className="p-2 h-8 w-8"
+            >
+              <btn.icon className="w-3 h-3" />
+            </Button>
+          ))}
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              saveSelection();
+              setShowLinkDialog(true);
+            }}
+            title="Insert Link"
+            className="p-2 h-8 w-8"
+          >
+            <Link className="w-3 h-3" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              saveSelection();
+              setShowImageDialog(true);
+            }}
+            title="Insert Image"
+            className="p-2 h-8 w-8"
+          >
+            <Image className="w-3 h-3" />
+          </Button>
+        </div>
+      )}
+
       {/* Rich Text Editor */}
       <div className="border rounded-lg">
-        {/* Toolbar */}
+        {/* Static Toolbar */}
         <div className="border-b p-2 flex flex-wrap gap-1">
           {toolbarButtons.map((btn, index) => (
             <Button
@@ -117,7 +332,10 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowLinkDialog(true)}
+            onClick={() => {
+              saveSelection();
+              setShowLinkDialog(true);
+            }}
             title="Insert Link"
             className="p-2"
           >
@@ -127,7 +345,10 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowImageDialog(true)}
+            onClick={() => {
+              saveSelection();
+              setShowImageDialog(true);
+            }}
             title="Insert Image"
             className="p-2"
           >
@@ -142,67 +363,83 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
           onInput={handleContentChange}
           dangerouslySetInnerHTML={{ __html: content }}
           className="p-4 min-h-[400px] focus:outline-none prose max-w-none"
-          style={{ minHeight: '400px' }}
+          style={{ 
+            minHeight: '400px',
+            lineHeight: '1.6'
+          }}
+          suppressContentEditableWarning={true}
         />
       </div>
 
       {/* Link Dialog */}
-      {showLinkDialog && (
-        <Card className="mt-4">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3">Insert Link</h3>
-            <div className="space-y-3">
+      <Dialog open={showLinkDialog} onOpenChange={setShowLinkDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Insert Link</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">URL</label>
               <Input
-                placeholder="Link text"
-                value={linkText}
-                onChange={(e) => setLinkText(e.target.value)}
-              />
-              <Input
-                placeholder="URL (https://example.com)"
                 value={linkUrl}
                 onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="https://example.com"
               />
-              <div className="flex space-x-2">
-                <Button onClick={insertLink} disabled={!linkUrl || !linkText}>
-                  Insert Link
-                </Button>
-                <Button variant="outline" onClick={() => setShowLinkDialog(false)}>
-                  Cancel
-                </Button>
-              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div>
+              <label className="block text-sm font-medium mb-2">Link Text (optional)</label>
+              <Input
+                value={linkText}
+                onChange={(e) => setLinkText(e.target.value)}
+                placeholder="Click here"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLinkDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={insertLink} disabled={!linkUrl}>
+              Insert Link
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Image Dialog */}
-      {showImageDialog && (
-        <Card className="mt-4">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3">Insert Image</h3>
-            <div className="space-y-3">
+      <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Insert Image</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Image URL</label>
               <Input
-                placeholder="Image URL (https://example.com/image.jpg)"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Alt Text</label>
               <Input
-                placeholder="Alt text (description)"
                 value={imageAlt}
                 onChange={(e) => setImageAlt(e.target.value)}
+                placeholder="Description of the image"
               />
-              <div className="flex space-x-2">
-                <Button onClick={insertImage} disabled={!imageUrl}>
-                  Insert Image
-                </Button>
-                <Button variant="outline" onClick={() => setShowImageDialog(false)}>
-                  Cancel
-                </Button>
-              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowImageDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={insertImage} disabled={!imageUrl}>
+              Insert Image
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
