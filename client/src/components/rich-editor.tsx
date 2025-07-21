@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -31,6 +31,96 @@ interface FloatingToolbarState {
   y: number;
 }
 
+interface EditorContentProps {
+  content: string;
+  onChange: (content: string) => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+}
+
+const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(({ content, onChange, onKeyDown }, ref) => {
+  const [isComposing, setIsComposing] = useState(false);
+  const [lastContent, setLastContent] = useState(content);
+  const innerRef = useRef<HTMLDivElement>(null);
+
+  // Combine refs
+  const combinedRef = useCallback((node: HTMLDivElement) => {
+    if (innerRef) {
+      innerRef.current = node;
+    }
+    if (typeof ref === 'function') {
+      ref(node);
+    } else if (ref) {
+      ref.current = node;
+    }
+  }, [ref]);
+
+  useEffect(() => {
+    // Only update DOM content if it actually changed from outside
+    // and we're not currently typing (to avoid cursor jumps)
+    if (innerRef.current && content !== lastContent && !isComposing && document.activeElement !== innerRef.current) {
+      const selection = window.getSelection();
+      let savedRange: Range | null = null;
+      
+      // Save selection if the element has focus
+      if (document.activeElement === innerRef.current && selection && selection.rangeCount > 0) {
+        savedRange = selection.getRangeAt(0).cloneRange();
+      }
+      
+      innerRef.current.innerHTML = content;
+      setLastContent(content);
+      
+      // Restore selection if we had one
+      if (savedRange && document.activeElement === innerRef.current) {
+        try {
+          selection?.removeAllRanges();
+          selection?.addRange(savedRange);
+        } catch (e) {
+          // Range might be invalid after content change, ignore
+        }
+      }
+    }
+  }, [content, lastContent, isComposing]);
+
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    if (!isComposing) {
+      const target = e.target as HTMLDivElement;
+      const newContent = target.innerHTML;
+      setLastContent(newContent);
+      onChange(newContent);
+    }
+  };
+
+  const handleCompositionStart = () => {
+    setIsComposing(true);
+  };
+
+  const handleCompositionEnd = (e: React.CompositionEvent<HTMLDivElement>) => {
+    setIsComposing(false);
+    const target = e.target as HTMLDivElement;
+    const newContent = target.innerHTML;
+    setLastContent(newContent);
+    onChange(newContent);
+  };
+
+  return (
+    <div
+      ref={combinedRef}
+      contentEditable
+      onInput={handleInput}
+      onKeyDown={onKeyDown}
+      onCompositionStart={handleCompositionStart}
+      onCompositionEnd={handleCompositionEnd}
+      className="p-4 min-h-[400px] focus:outline-none prose max-w-none"
+      style={{ 
+        minHeight: '400px',
+        lineHeight: '1.6'
+      }}
+      suppressContentEditableWarning={true}
+      dangerouslySetInnerHTML={{ __html: content }}
+    />
+  );
+});
+
 export default function RichEditor({ content, onChange, title, onTitleChange }: RichEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
@@ -45,6 +135,7 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
     y: 0
   });
   const [savedSelection, setSavedSelection] = useState<Range | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Save and restore selection
   const saveSelection = useCallback(() => {
@@ -185,21 +276,7 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
   // Handle content changes while preserving cursor position
   const handleContentChange = useCallback((e: any) => {
     if (editorRef.current) {
-      // Save current cursor position before updating content
-      const selection = window.getSelection();
-      let cursorPos = 0;
-      let node: Node | null = null;
-      
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        cursorPos = range.startOffset;
-        node = range.startContainer;
-      }
-      
       onChange(editorRef.current.innerHTML);
-      
-      // Don't restore position during onChange to prevent cursor jumping
-      // The browser will naturally maintain position during normal typing
     }
   }, [onChange]);
 
@@ -448,10 +525,10 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
         </div>
 
         {/* Editor Content */}
-        <div
+        <EditorContent
           ref={editorRef}
-          contentEditable
-          onInput={handleContentChange}
+          content={content}
+          onChange={onChange}
           onKeyDown={(e) => {
             // Prevent default behavior for formatting shortcuts
             if (e.ctrlKey || e.metaKey) {
@@ -471,13 +548,6 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
               }
             }
           }}
-          dangerouslySetInnerHTML={{ __html: content }}
-          className="p-4 min-h-[400px] focus:outline-none prose max-w-none"
-          style={{ 
-            minHeight: '400px',
-            lineHeight: '1.6'
-          }}
-          suppressContentEditableWarning={true}
         />
       </div>
 
