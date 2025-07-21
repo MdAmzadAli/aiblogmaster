@@ -55,15 +55,17 @@ class BlogScheduler {
 
     const task = cron.schedule(cronExpression, async () => {
       try {
-        console.log("Running automated content generation...");
+        console.log("Running automated content generation (IST)...");
         await this.generateAndSchedulePost(settings);
       } catch (error) {
         console.error("Error in automated post generation:", error);
       }
+    }, {
+      timezone: "Asia/Kolkata"
     });
 
     this.jobs.set("automation", task);
-    console.log(`Scheduled automated posting: ${cronExpression}`);
+    console.log(`Scheduled automated posting (IST): ${cronExpression} at ${settings.scheduledTime} IST`);
   }
 
   private schedulePostPublishing() {
@@ -74,6 +76,8 @@ class BlogScheduler {
       } catch (error) {
         console.error("Error publishing scheduled posts:", error);
       }
+    }, {
+      timezone: "Asia/Kolkata"
     });
 
     this.jobs.set("publishing", task);
