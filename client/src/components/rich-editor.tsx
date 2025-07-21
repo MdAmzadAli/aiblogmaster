@@ -90,11 +90,11 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
             range.deleteContents();
             range.insertNode(headingElement);
             
-            // Place cursor after the heading
-            range.setStartAfter(headingElement);
-            range.setEndAfter(headingElement);
+            // Keep the heading selected after creation
+            const newRange = document.createRange();
+            newRange.selectNodeContents(headingElement);
             selection.removeAllRanges();
-            selection.addRange(range);
+            selection.addRange(newRange);
             
             saveSelection();
           }
@@ -103,7 +103,14 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
     } else if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
       // Enhanced list handling
       document.execCommand(command, false, undefined);
-      saveSelection();
+      
+      // Maintain selection after list creation
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          saveSelection();
+        }
+      }, 10);
     } else if (command.startsWith('justify')) {
       // Enhanced alignment
       const selection = window.getSelection();
@@ -117,7 +124,7 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
             container.appendChild(range.extractContents());
             range.insertNode(container);
             
-            // Restore selection
+            // Keep selection on the aligned content
             const newRange = document.createRange();
             newRange.selectNodeContents(container);
             selection.removeAllRanges();
@@ -126,15 +133,23 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
           } catch (e) {
             // Fallback to document.execCommand
             document.execCommand(command, false, undefined);
+            saveSelection();
           }
         } else {
           document.execCommand(command, false, undefined);
         }
       }
     } else {
-      // Use standard execCommand for other operations
+      // Use standard execCommand for other operations like bold, italic, underline
       document.execCommand(command, false, value);
-      saveSelection();
+      
+      // Maintain selection after formatting
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          saveSelection();
+        }
+      }, 10);
     }
     
     if (editorRef.current) {
@@ -170,7 +185,21 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
   // Handle content changes while preserving cursor position
   const handleContentChange = useCallback((e: any) => {
     if (editorRef.current) {
+      // Save current cursor position before updating content
+      const selection = window.getSelection();
+      let cursorPos = 0;
+      let node: Node | null = null;
+      
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        cursorPos = range.startOffset;
+        node = range.startContainer;
+      }
+      
       onChange(editorRef.current.innerHTML);
+      
+      // Don't restore position during onChange to prevent cursor jumping
+      // The browser will naturally maintain position during normal typing
     }
   }, [onChange]);
 
@@ -179,6 +208,7 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
     const target = e.target as Element;
     if (target && !target.closest('.floating-toolbar') && !editorRef.current?.contains(target as Node)) {
       setFloatingToolbar({ show: false, x: 0, y: 0 });
+      setSavedSelection(null);
     }
   }, []);
 
@@ -197,11 +227,39 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
   const insertLink = () => {
     if (linkUrl) {
       restoreSelection();
-      const linkHTML = linkText 
-        ? `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: underline;">${linkText}</a>`
-        : `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: underline;">${linkUrl}</a>`;
       
-      document.execCommand('insertHTML', false, linkHTML);
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const selectedText = range.toString();
+        
+        // If we have selected text, use it as the link text
+        // If no text is selected or user provided custom link text, use that
+        const finalLinkText = selectedText.trim() 
+          ? selectedText 
+          : (linkText.trim() || linkUrl);
+        
+        const linkElement = document.createElement('a');
+        linkElement.href = linkUrl;
+        linkElement.target = '_blank';
+        linkElement.rel = 'noopener noreferrer';
+        linkElement.style.color = '#3b82f6';
+        linkElement.style.textDecoration = 'underline';
+        linkElement.textContent = finalLinkText;
+        
+        // If there's selected text, replace it with the link
+        if (!range.collapsed) {
+          range.deleteContents();
+        }
+        
+        range.insertNode(linkElement);
+        
+        // Place cursor after the link
+        range.setStartAfter(linkElement);
+        range.setEndAfter(linkElement);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
       
       if (editorRef.current) {
         onChange(editorRef.current.innerHTML);
@@ -276,7 +334,15 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
               key={index}
               variant="ghost"
               size="sm"
-              onClick={() => executeCommand(btn.command, btn.value)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                executeCommand(btn.command, btn.value);
+                // Keep the toolbar visible and re-trigger selection check
+                setTimeout(() => {
+                  handleSelection();
+                }, 50);
+              }}
               title={btn.title}
               className="p-2 h-8 w-8"
             >
@@ -287,7 +353,20 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              // Save selection and pre-fill link text if there's selected text
+              const selection = window.getSelection();
+              if (selection && selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const selectedText = range.toString();
+                if (selectedText.trim()) {
+                  setLinkText(selectedText.trim());
+                }
+              }
+              
               saveSelection();
               setShowLinkDialog(true);
             }}
@@ -300,7 +379,9 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               saveSelection();
               setShowImageDialog(true);
             }}
@@ -333,6 +414,16 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
             variant="ghost"
             size="sm"
             onClick={() => {
+              // Save selection and pre-fill link text if there's selected text
+              const selection = window.getSelection();
+              if (selection && selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const selectedText = range.toString();
+                if (selectedText.trim()) {
+                  setLinkText(selectedText.trim());
+                }
+              }
+              
               saveSelection();
               setShowLinkDialog(true);
             }}
@@ -361,6 +452,25 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
           ref={editorRef}
           contentEditable
           onInput={handleContentChange}
+          onKeyDown={(e) => {
+            // Prevent default behavior for formatting shortcuts
+            if (e.ctrlKey || e.metaKey) {
+              switch (e.key) {
+                case 'b':
+                  e.preventDefault();
+                  executeCommand('bold');
+                  break;
+                case 'i':
+                  e.preventDefault();
+                  executeCommand('italic');
+                  break;
+                case 'u':
+                  e.preventDefault();
+                  executeCommand('underline');
+                  break;
+              }
+            }
+          }}
           dangerouslySetInnerHTML={{ __html: content }}
           className="p-4 min-h-[400px] focus:outline-none prose max-w-none"
           style={{ 
