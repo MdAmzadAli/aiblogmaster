@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import AdminLayout from "@/pages/admin";
 import Post from "@/pages/post";
+import PostEditor from "@/pages/post-editor";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -17,6 +18,8 @@ function Router() {
     <Switch>
       <Route path="/" component={isAuthenticated ? Home : Landing} />
       <Route path="/admin" nest component={AdminLayout} />
+      <Route path="/post-editor" component={PostEditor} />
+      <Route path="/post-editor/:id" component={PostEditor} />
       <Route path="/post/:slug" component={Post} />
       <Route component={NotFound} />
     </Switch>

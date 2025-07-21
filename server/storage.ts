@@ -3,6 +3,7 @@ import {
   posts,
   postAnalytics,
   automationSettings,
+  approvalTokens,
   type User,
   type UpsertUser,
   type Post,
@@ -107,6 +108,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deletePost(id: number): Promise<void> {
+    // First delete any related approval tokens to avoid foreign key constraint
+    await db.delete(approvalTokens).where(eq(approvalTokens.postId, id));
+    
+    // Then delete the post
     await db.delete(posts).where(eq(posts.id, id));
   }
 
