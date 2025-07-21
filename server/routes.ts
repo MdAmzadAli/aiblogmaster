@@ -60,6 +60,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search route
+  app.get("/api/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      const query = String(q || "").toLowerCase();
+      
+      if (!query || query.length < 3) {
+        return res.json([]);
+      }
+      
+      const posts = await storage.getPublishedPosts(50);
+      const searchResults = posts.filter(post => 
+        post.title.toLowerCase().includes(query) ||
+        post.content.toLowerCase().includes(query) ||
+        post.excerpt?.toLowerCase().includes(query) ||
+        post.category.toLowerCase().includes(query) ||
+        (post.keywords && post.keywords.some(keyword => 
+          keyword.toLowerCase().includes(query)
+        ))
+      );
+      
+      res.json(searchResults.slice(0, 20)); // Limit to 20 results
+    } catch (error) {
+      console.error("Error searching posts:", error);
+      res.status(500).json({ message: "Failed to search posts" });
+    }
+  });
+
   app.get("/api/posts/:slug", async (req, res) => {
     try {
       const { slug } = req.params;

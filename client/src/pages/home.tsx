@@ -36,7 +36,7 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Welcome back, {user?.firstName || 'Admin'}!
+                Welcome back, Admin!
               </h1>
               <p className="text-gray-600">
                 Manage your AI-powered blog platform and monitor performance.
