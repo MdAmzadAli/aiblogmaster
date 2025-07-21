@@ -46,7 +46,7 @@ const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(({ content,
 
   // Combine refs
   const combinedRef = useCallback((node: HTMLDivElement) => {
-    innerRef.current = node;
+    (innerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
     if (typeof ref === 'function') {
       ref(node);
     } else if (ref) {
@@ -136,7 +136,53 @@ const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(({ content,
       className="p-4 min-h-[400px] focus:outline-none prose max-w-none"
       style={{ 
         minHeight: '400px',
-        lineHeight: '1.6'
+        lineHeight: '1.6',
+        // Make empty areas clickable by ensuring the element fills space
+        whiteSpace: 'pre-wrap',
+        // Ensure clickable gaps between paragraphs
+        paddingBottom: '20px'
+      }}
+      onClick={(e) => {
+        // Handle clicks on empty areas between paragraphs
+        if (innerRef.current && e.target === innerRef.current) {
+          const rect = innerRef.current.getBoundingClientRect();
+          const clickY = e.clientY - rect.top;
+          const lineHeight = parseFloat(getComputedStyle(innerRef.current).lineHeight) || 24;
+          
+          // If clicking in empty space, place cursor at the end
+          const selection = window.getSelection();
+          const range = document.createRange();
+          
+          // Try to place cursor at the clicked position
+          try {
+            if ((document as any).caretPositionFromPoint) {
+              const caretPos = (document as any).caretPositionFromPoint(e.clientX, e.clientY);
+              if (caretPos) {
+                range.setStart(caretPos.offsetNode, caretPos.offset);
+                range.collapse(true);
+              }
+            } else if ((document as any).caretRangeFromPoint) {
+              const caretRange = (document as any).caretRangeFromPoint(e.clientX, e.clientY);
+              if (caretRange) {
+                range.setStart(caretRange.startContainer, caretRange.startOffset);
+                range.collapse(true);
+              }
+            } else {
+              // Fallback: place cursor at the end of content
+              range.selectNodeContents(innerRef.current);
+              range.collapse(false);
+            }
+            
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+          } catch (error) {
+            // Fallback: place cursor at the end
+            range.selectNodeContents(innerRef.current);
+            range.collapse(false);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+          }
+        }
       }}
       suppressContentEditableWarning={true}
     />
@@ -214,14 +260,39 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
         }
       }
     } else if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
-      // Enhanced list handling
+      // Enhanced list handling with selection preservation
+      const selection = window.getSelection();
+      let savedRange: Range | null = null;
+      
+      if (selection && selection.rangeCount > 0) {
+        savedRange = selection.getRangeAt(0).cloneRange();
+      }
+      
       document.execCommand(command, false, undefined);
       
       // Maintain selection after list creation
       setTimeout(() => {
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          saveSelection();
+        if (savedRange) {
+          try {
+            const selection = window.getSelection();
+            if (selection) {
+              // Try to restore original selection
+              selection.removeAllRanges();
+              selection.addRange(savedRange);
+              saveSelection();
+            }
+          } catch (e) {
+            // If range is invalid, try to select the list item content
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+              saveSelection();
+            }
+          }
+        } else {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            saveSelection();
+          }
         }
       }, 10);
     } else if (command.startsWith('justify')) {
@@ -253,14 +324,31 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
         }
       }
     } else {
-      // Use standard execCommand for other operations like bold, italic, underline
+      // For all other commands (bold, italic, underline, etc.)
+      // Save current selection, execute command, then restore selection
+      const selection = window.getSelection();
+      let savedRange: Range | null = null;
+      
+      if (selection && selection.rangeCount > 0) {
+        savedRange = selection.getRangeAt(0).cloneRange();
+      }
+      
       document.execCommand(command, false, value);
       
-      // Maintain selection after formatting
+      // Restore selection to keep text selected after formatting
       setTimeout(() => {
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          saveSelection();
+        if (savedRange) {
+          try {
+            const selection = window.getSelection();
+            if (selection) {
+              selection.removeAllRanges();
+              selection.addRange(savedRange);
+              saveSelection();
+            }
+          } catch (e) {
+            // Range might be invalid, try to reselect similar area
+            console.log('Selection restoration failed for command:', command);
+          }
         }
       }, 10);
     }
