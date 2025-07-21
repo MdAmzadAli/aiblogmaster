@@ -62,7 +62,7 @@ Respond with JSON in this exact format:
 }`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-1.5-flash",
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -95,6 +95,21 @@ Respond with JSON in this exact format:
     // Validate and ensure proper formatting
     if (!generatedContent.title || !generatedContent.content) {
       throw new Error("Invalid response structure from Gemini");
+    }
+
+    // Ensure meta description doesn't exceed database limit (160 characters)
+    if (generatedContent.metaDescription && generatedContent.metaDescription.length > 160) {
+      generatedContent.metaDescription = generatedContent.metaDescription.substring(0, 157) + "...";
+    }
+
+    // Ensure title doesn't exceed reasonable SEO limits (60 characters)
+    if (generatedContent.title && generatedContent.title.length > 60) {
+      generatedContent.title = generatedContent.title.substring(0, 57) + "...";
+    }
+
+    // Ensure excerpt is reasonable length
+    if (generatedContent.excerpt && generatedContent.excerpt.length > 300) {
+      generatedContent.excerpt = generatedContent.excerpt.substring(0, 297) + "...";
     }
 
     return generatedContent;
@@ -149,7 +164,7 @@ Respond with JSON in this format:
 }`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-1.5-flash",
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -178,7 +193,19 @@ Respond with JSON in this format:
       throw new Error("Empty response from Gemini");
     }
 
-    return JSON.parse(rawJson);
+    const analysis: SEOAnalysis = JSON.parse(rawJson);
+    
+    // Ensure optimized meta description doesn't exceed database limit
+    if (analysis.optimizedMetaDescription && analysis.optimizedMetaDescription.length > 160) {
+      analysis.optimizedMetaDescription = analysis.optimizedMetaDescription.substring(0, 157) + "...";
+    }
+    
+    // Ensure optimized title doesn't exceed reasonable SEO limits
+    if (analysis.optimizedTitle && analysis.optimizedTitle.length > 60) {
+      analysis.optimizedTitle = analysis.optimizedTitle.substring(0, 57) + "...";
+    }
+
+    return analysis;
   } catch (error: any) {
     console.error("Error analyzing SEO:", error);
     

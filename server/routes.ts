@@ -110,6 +110,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/posts", async (req, res) => {
     try {
       const validatedData = insertPostSchema.parse(req.body);
+      
+      // Ensure database constraints are respected
+      if (validatedData.metaDescription && validatedData.metaDescription.length > 160) {
+        validatedData.metaDescription = validatedData.metaDescription.substring(0, 157) + "...";
+      }
+      
       const post = await storage.createPost(validatedData);
       res.json(post);
     } catch (error) {
@@ -122,6 +128,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = Number(req.params.id);
       const validatedData = insertPostSchema.partial().parse(req.body);
+      
+      // Ensure database constraints are respected
+      if (validatedData.metaDescription && validatedData.metaDescription.length > 160) {
+        validatedData.metaDescription = validatedData.metaDescription.substring(0, 157) + "...";
+      }
       
       // Set publishedAt when publishing
       if (validatedData.status === "published" && !validatedData.publishedAt) {
