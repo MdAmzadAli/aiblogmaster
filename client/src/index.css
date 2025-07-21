@@ -173,6 +173,30 @@
     z-index: 9999 !important;
     pointer-events: auto !important;
   }
+
+  /* Better paragraph spacing and clickability */
+  .prose p {
+    margin-bottom: 1.2em;
+    min-height: 1.5em;
+  }
+
+  /* Make empty paragraphs clickable */
+  [contenteditable="true"] p:empty:before {
+    content: "\00a0";
+    color: transparent;
+  }
+
+  [contenteditable="true"] div:empty:before {
+    content: "\00a0";
+    color: transparent;
+  }
+
+  /* Add spacing between paragraphs to improve clickability */
+  [contenteditable="true"] br:after {
+    content: "\00a0";
+    display: inline-block;
+    width: 0;
+  }
 }
 
 /* Custom scrollbar */

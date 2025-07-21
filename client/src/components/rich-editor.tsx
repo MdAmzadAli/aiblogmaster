@@ -15,7 +15,10 @@ import {
   AlignRight,
   Heading1,
   Heading2,
-  Heading3
+  Heading3,
+  Type,
+  Minus,
+  Plus
 } from "lucide-react";
 
 interface RichEditorProps {
@@ -140,7 +143,9 @@ const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(({ content,
         // Make empty areas clickable by ensuring the element fills space
         whiteSpace: 'pre-wrap',
         // Ensure clickable gaps between paragraphs
-        paddingBottom: '20px'
+        paddingBottom: '20px',
+        // Add padding between paragraphs to make gaps clickable
+        wordSpacing: 'normal'
       }}
       onClick={(e) => {
         // Handle clicks on empty areas between paragraphs
@@ -267,6 +272,49 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
     setActiveFormats(activeSet);
     return activeSet;
   }, []);
+
+  // Font size functionality
+  const changeFontSize = useCallback((increase: boolean) => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      if (!range.collapsed) {
+        const selectedText = range.toString();
+        if (selectedText.trim()) {
+          // Create a span element to wrap the selected text
+          const span = document.createElement('span');
+          span.textContent = selectedText;
+          
+          // Get current font size or default to 16px
+          const container = range.commonAncestorContainer;
+          const parent = container.nodeType === Node.TEXT_NODE ? container.parentElement : container as Element;
+          const currentFontSize = parent ? parseFloat(window.getComputedStyle(parent).fontSize) : 16;
+          
+          // Calculate new font size (increase/decrease by 2px)
+          const newFontSize = increase ? currentFontSize + 2 : Math.max(8, currentFontSize - 2);
+          span.style.fontSize = `${newFontSize}px`;
+          
+          // Replace the selected content
+          range.deleteContents();
+          range.insertNode(span);
+          
+          // Reselect the span content
+          const newRange = document.createRange();
+          newRange.selectNodeContents(span);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+          
+          // Update saved selection
+          setSavedSelection(newRange.cloneRange());
+          
+          // Trigger content change
+          if (editorRef.current) {
+            onChange(editorRef.current.innerHTML);
+          }
+        }
+      }
+    }
+  }, [onChange]);
 
   // Enhanced command execution that preserves selection
   const executeCommand = useCallback((command: string, value?: string) => {
@@ -626,6 +674,42 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
               <btn.icon className="w-3 h-3" />
             </Button>
           ))}
+          
+          {/* Font Size Controls */}
+          <div className="border-l border-gray-200 ml-1 pl-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                changeFontSize(false);
+                setTimeout(() => {
+                  maintainToolbarAfterFormatting();
+                }, 20);
+              }}
+              title="Decrease Font Size"
+              className="p-2 h-8 w-8"
+            >
+              <Minus className="w-3 h-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                changeFontSize(true);
+                setTimeout(() => {
+                  maintainToolbarAfterFormatting();
+                }, 20);
+              }}
+              title="Increase Font Size"
+              className="p-2 h-8 w-8"
+            >
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
           
           <Button
             variant="ghost"
