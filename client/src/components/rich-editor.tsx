@@ -204,6 +204,7 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
   });
   const [savedSelection, setSavedSelection] = useState<Range | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
 
   // Save and restore selection
   const saveSelection = useCallback(() => {
@@ -225,6 +226,47 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
       }
     }
   }, [savedSelection]);
+
+  // Check active formatting states for selected text
+  const checkActiveFormats = useCallback(() => {
+    const activeSet = new Set<string>();
+    
+    try {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+        // Check for basic formatting
+        if (document.queryCommandState('bold')) activeSet.add('bold');
+        if (document.queryCommandState('italic')) activeSet.add('italic');
+        if (document.queryCommandState('underline')) activeSet.add('underline');
+        
+        // Check for heading formats by examining selected elements
+        const range = selection.getRangeAt(0);
+        const container = range.commonAncestorContainer;
+        const parent = container.nodeType === Node.TEXT_NODE ? container.parentElement : container as Element;
+        
+        if (parent) {
+          // Check for our inline heading classes
+          if (parent.classList?.contains('h1') || parent.tagName === 'H1') activeSet.add('h1');
+          if (parent.classList?.contains('h2') || parent.tagName === 'H2') activeSet.add('h2');
+          if (parent.classList?.contains('h3') || parent.tagName === 'H3') activeSet.add('h3');
+          
+          // Check parent elements for formatting
+          let currentElement: Element | null = parent;
+          while (currentElement && currentElement !== editorRef.current) {
+            if (currentElement.classList?.contains('h1') || currentElement.tagName === 'H1') activeSet.add('h1');
+            if (currentElement.classList?.contains('h2') || currentElement.tagName === 'H2') activeSet.add('h2');
+            if (currentElement.classList?.contains('h3') || currentElement.tagName === 'H3') activeSet.add('h3');
+            currentElement = currentElement.parentElement;
+          }
+        }
+      }
+    } catch (error) {
+      // Silently handle any errors in format checking
+    }
+    
+    setActiveFormats(activeSet);
+    return activeSet;
+  }, []);
 
   // Enhanced command execution that preserves selection
   const executeCommand = useCallback((command: string, value?: string) => {
@@ -271,7 +313,7 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
             // Update saved selection and maintain floating toolbar
             saveSelection();
             
-            // Force toolbar to stay visible with updated position
+            // Force toolbar to stay visible with updated position and check active formats
             setTimeout(() => {
               const rect = headingElement.getBoundingClientRect();
               setFloatingToolbar({
@@ -279,6 +321,7 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
                 x: Math.max(10, rect.left + (rect.width / 2) - 200),
                 y: Math.max(10, rect.top - 60)
               });
+              checkActiveFormats();
             }, 10);
           }
         }
@@ -368,6 +411,17 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
               selection.removeAllRanges();
               selection.addRange(savedRange);
               saveSelection();
+              checkActiveFormats();
+              
+              // Update floating toolbar position if visible
+              if (floatingToolbar.show) {
+                const rect = savedRange.getBoundingClientRect();
+                setFloatingToolbar({
+                  show: true,
+                  x: Math.max(10, rect.left + (rect.width / 2) - 200),
+                  y: Math.max(10, rect.top - 60)
+                });
+              }
             }
           } catch (e) {
             // Range might be invalid, try to reselect similar area
@@ -402,15 +456,18 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
         }));
         
         saveSelection();
+        checkActiveFormats();
       } else if (!floatingToolbar.show) {
         // Only hide if toolbar wasn't already showing (preserve after formatting)
         setFloatingToolbar({ show: false, x: 0, y: 0 });
+        setActiveFormats(new Set());
       }
     } else if (!floatingToolbar.show) {
       // Only hide if toolbar wasn't already showing
       setFloatingToolbar({ show: false, x: 0, y: 0 });
+      setActiveFormats(new Set());
     }
-  }, [saveSelection, floatingToolbar.show]);
+  }, [saveSelection, floatingToolbar.show, checkActiveFormats]);
 
   // This is now handled by EditorContent component
 
@@ -521,17 +578,17 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
   };
 
   const toolbarButtons = [
-    { icon: Bold, command: 'bold', title: 'Bold' },
-    { icon: Italic, command: 'italic', title: 'Italic' },
-    { icon: Underline, command: 'underline', title: 'Underline' },
-    { icon: Heading1, command: 'formatBlock', value: 'h1', title: 'Heading 1' },
-    { icon: Heading2, command: 'formatBlock', value: 'h2', title: 'Heading 2' },
-    { icon: Heading3, command: 'formatBlock', value: 'h3', title: 'Heading 3' },
-    { icon: List, command: 'insertUnorderedList', title: 'Bullet List' },
-    { icon: ListOrdered, command: 'insertOrderedList', title: 'Numbered List' },
-    { icon: AlignLeft, command: 'justifyLeft', title: 'Align Left' },
-    { icon: AlignCenter, command: 'justifyCenter', title: 'Align Center' },
-    { icon: AlignRight, command: 'justifyRight', title: 'Align Right' },
+    { icon: Bold, command: 'bold', title: 'Bold', format: 'bold' },
+    { icon: Italic, command: 'italic', title: 'Italic', format: 'italic' },
+    { icon: Underline, command: 'underline', title: 'Underline', format: 'underline' },
+    { icon: Heading1, command: 'formatBlock', value: 'h1', title: 'Heading 1', format: 'h1' },
+    { icon: Heading2, command: 'formatBlock', value: 'h2', title: 'Heading 2', format: 'h2' },
+    { icon: Heading3, command: 'formatBlock', value: 'h3', title: 'Heading 3', format: 'h3' },
+    { icon: List, command: 'insertUnorderedList', title: 'Bullet List', format: 'list' },
+    { icon: ListOrdered, command: 'insertOrderedList', title: 'Numbered List', format: 'orderedlist' },
+    { icon: AlignLeft, command: 'justifyLeft', title: 'Align Left', format: 'left' },
+    { icon: AlignCenter, command: 'justifyCenter', title: 'Align Center', format: 'center' },
+    { icon: AlignRight, command: 'justifyRight', title: 'Align Right', format: 'right' },
   ];
 
   return (
@@ -574,7 +631,11 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
                 }, 50);
               }}
               title={btn.title}
-              className="p-2 h-8 w-8"
+              className={`p-2 h-8 w-8 ${
+                activeFormats.has(btn.format) 
+                  ? 'bg-gray-200 dark:bg-gray-600' 
+                  : ''
+              }`}
             >
               <btn.icon className="w-3 h-3" />
             </Button>
@@ -634,7 +695,11 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
               size="sm"
               onClick={() => executeCommand(btn.command, btn.value)}
               title={btn.title}
-              className="p-2"
+              className={`p-2 ${
+                activeFormats.has(btn.format) 
+                  ? 'bg-gray-200 dark:bg-gray-600' 
+                  : ''
+              }`}
             >
               <btn.icon className="w-4 h-4" />
             </Button>
