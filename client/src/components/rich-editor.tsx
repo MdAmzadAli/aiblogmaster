@@ -276,19 +276,25 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
     restoreSelection();
     
     if (command === 'formatBlock' && value && ['h1', 'h2', 'h3'].includes(value)) {
-      // Custom heading implementation that preserves inline flow
+      // Enhanced heading implementation with forced selection persistence
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
         if (!range.collapsed) {
           const selectedText = range.toString();
           if (selectedText.trim()) {
-            // Create an inline heading element that doesn't break text flow
+            // Store original range position
+            const startContainer = range.startContainer;
+            const startOffset = range.startOffset;
+            const endContainer = range.endContainer;
+            const endOffset = range.endOffset;
+            
+            // Create an inline heading element
             const headingElement = document.createElement('span');
             headingElement.textContent = selectedText;
             headingElement.className = `inline-heading ${value}`;
             
-            // Apply appropriate styling based on heading level
+            // Apply appropriate styling
             const headingStyles = {
               h1: { fontSize: '2rem', fontWeight: 'bold', lineHeight: '1.2' },
               h2: { fontSize: '1.5rem', fontWeight: 'bold', lineHeight: '1.3' },
@@ -298,56 +304,50 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
             const styles = headingStyles[value as keyof typeof headingStyles];
             Object.assign(headingElement.style, styles);
             
-            // Store the original selection for restoration
-            const savedRange = range.cloneRange();
-            
+            // Replace content and immediately force selection
             range.deleteContents();
             range.insertNode(headingElement);
             
-            // Immediately select the new heading element and force toolbar persistence
-            const newRange = document.createRange();
-            newRange.selectNodeContents(headingElement);
-            selection.removeAllRanges();
-            selection.addRange(newRange);
-            
-            // Force immediate state updates
-            const persistedRange = newRange.cloneRange();
-            setSavedSelection(persistedRange);
-            
-            // Force toolbar to show immediately
-            const rect = headingElement.getBoundingClientRect();
-            setFloatingToolbar({
-              show: true,
-              x: Math.max(10, rect.left + (rect.width / 2) - 200),
-              y: Math.max(10, rect.top - 60)
-            });
-            
-            // Multiple aggressive restoration attempts to ensure selection persists
-            const restoreSelection = () => {
-              const currentSelection = window.getSelection();
-              if (currentSelection && headingElement.parentNode) {
-                currentSelection.removeAllRanges();
-                const restoreRange = document.createRange();
-                restoreRange.selectNodeContents(headingElement);
-                currentSelection.addRange(restoreRange);
-                setSavedSelection(restoreRange.cloneRange());
+            // CRITICAL: Prevent any event bubbling that might clear selection
+            const forceSelection = () => {
+              const newSelection = window.getSelection();
+              if (newSelection && headingElement.parentNode) {
+                const newRange = document.createRange();
+                newRange.selectNodeContents(headingElement);
+                newSelection.removeAllRanges();
+                newSelection.addRange(newRange);
                 
-                const newRect = headingElement.getBoundingClientRect();
+                // Immediately update saved selection
+                setSavedSelection(newRange.cloneRange());
+                
+                // Force toolbar position update
+                const rect = headingElement.getBoundingClientRect();
                 setFloatingToolbar({
                   show: true,
-                  x: Math.max(10, newRect.left + (newRect.width / 2) - 200),
-                  y: Math.max(10, newRect.top - 60)
+                  x: Math.max(10, rect.left + (rect.width / 2) - 200),
+                  y: Math.max(10, rect.top - 60)
                 });
+                
                 checkActiveFormats();
+                return true;
               }
+              return false;
             };
             
-            // Restore selection multiple times with different delays
-            setTimeout(restoreSelection, 1);
-            setTimeout(restoreSelection, 10);
-            setTimeout(restoreSelection, 50);
-            setTimeout(restoreSelection, 100);
-            setTimeout(restoreSelection, 200);
+            // Force selection immediately and continuously
+            forceSelection();
+            
+            // Use requestAnimationFrame for immediate next frame
+            requestAnimationFrame(() => {
+              forceSelection();
+              
+              // Also use timeouts as backup
+              setTimeout(forceSelection, 1);
+              setTimeout(forceSelection, 5);
+              setTimeout(forceSelection, 15);
+              setTimeout(forceSelection, 50);
+              setTimeout(forceSelection, 100);
+            });
           }
         }
       }
@@ -708,37 +708,35 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                
+                // CRITICAL: Force toolbar to stay visible before any command execution
+                setFloatingToolbar(prev => ({ ...prev, show: true }));
+                
                 executeCommand(btn.command, btn.value);
                 
-                // Enhanced selection persistence for toolbar buttons
-                setTimeout(() => {
+                // Immediately force toolbar visibility and never let it hide
+                const maintainToolbar = () => {
+                  setFloatingToolbar(prev => ({ ...prev, show: true }));
+                  
                   const selection = window.getSelection();
-                  if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
-                    // We have a selection, ensure toolbar stays visible
+                  if (selection && selection.rangeCount > 0) {
                     const range = selection.getRangeAt(0);
-                    const rect = range.getBoundingClientRect();
-                    setFloatingToolbar({
-                      show: true,
-                      x: Math.max(10, rect.left + (rect.width / 2) - 200),
-                      y: Math.max(10, rect.top - 60)
-                    });
-                    setSavedSelection(range.cloneRange());
-                    checkActiveFormats();
-                  } else {
-                    // No selection, trigger normal selection handling
-                    handleSelection();
-                  }
-                }, 10);
-                
-                // Aggressive selection persistence with multiple attempts
-                const ensureSelectionPersists = () => {
-                  const selection = window.getSelection();
-                  if ((!selection || selection.rangeCount === 0 || selection.getRangeAt(0).collapsed) && savedSelection) {
+                    if (!range.collapsed) {
+                      const rect = range.getBoundingClientRect();
+                      setFloatingToolbar({
+                        show: true,
+                        x: Math.max(10, rect.left + (rect.width / 2) - 200),
+                        y: Math.max(10, rect.top - 60)
+                      });
+                      setSavedSelection(range.cloneRange());
+                      checkActiveFormats();
+                    }
+                  } else if (savedSelection) {
+                    // Always restore from saved selection if current selection is lost
                     try {
-                      if (selection && savedSelection) {
+                      if (selection) {
                         selection.removeAllRanges();
                         selection.addRange(savedSelection);
-                        
                         const rect = savedSelection.getBoundingClientRect();
                         setFloatingToolbar({
                           show: true,
@@ -748,16 +746,21 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
                         checkActiveFormats();
                       }
                     } catch (e) {
-                      // Keep trying to maintain toolbar visibility
-                      setFloatingToolbar(prev => prev.show ? prev : { show: false, x: 0, y: 0 });
+                      // Keep toolbar visible even if selection restoration fails
+                      setFloatingToolbar(prev => ({ ...prev, show: true }));
                     }
                   }
                 };
                 
-                // Multiple persistence attempts
-                setTimeout(ensureSelectionPersists, 50);
-                setTimeout(ensureSelectionPersists, 150);
-                setTimeout(ensureSelectionPersists, 300);
+                // Aggressive toolbar maintenance
+                maintainToolbar();
+                requestAnimationFrame(maintainToolbar);
+                setTimeout(maintainToolbar, 1);
+                setTimeout(maintainToolbar, 10);
+                setTimeout(maintainToolbar, 50);
+                setTimeout(maintainToolbar, 100);
+                setTimeout(maintainToolbar, 200);
+                setTimeout(maintainToolbar, 500);
               }}
               title={btn.title}
               className={`p-2 h-8 w-8 ${
