@@ -311,9 +311,17 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
             // Update saved selection and trigger toolbar update
             setSavedSelection(newRange.cloneRange());
             
-            // Let the normal selection handler update toolbar position
+            // Force toolbar to stay visible with proper positioning
+            const rect = headingElement.getBoundingClientRect();
+            setFloatingToolbar({
+              show: true,
+              x: Math.max(10, rect.left + (rect.width / 2) - 200),
+              y: Math.max(10, rect.top - 60)
+            });
+            
+            // Update formats to show heading is active
             setTimeout(() => {
-              handleSelection();
+              checkActiveFormats();
             }, 10);
           }
         }
@@ -592,15 +600,44 @@ export default function RichEditor({ content, onChange, title, onTitleChange }: 
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                
+                // Store current selection before command execution
+                const currentSelection = window.getSelection();
+                const currentRange = currentSelection && currentSelection.rangeCount > 0 ? currentSelection.getRangeAt(0) : null;
+                
                 executeCommand(btn.command, btn.value);
                 
-                // Simple approach: just trigger selection handling after a brief delay
+                // After command execution, restore and maintain selection
                 setTimeout(() => {
                   const selection = window.getSelection();
-                  if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+                  if (selection && currentRange) {
+                    try {
+                      // Try to restore the selection
+                      selection.removeAllRanges();
+                      selection.addRange(currentRange);
+                      
+                      // Force toolbar to stay visible
+                      const rect = currentRange.getBoundingClientRect();
+                      setFloatingToolbar({
+                        show: true,
+                        x: Math.max(10, rect.left + (rect.width / 2) - 200),
+                        y: Math.max(10, rect.top - 60)
+                      });
+                      
+                      // Update saved selection and check formats
+                      setSavedSelection(currentRange.cloneRange());
+                      checkActiveFormats();
+                    } catch (e) {
+                      // If range restoration fails, try to maintain any existing selection
+                      if (selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+                        handleSelection();
+                      }
+                    }
+                  } else if (selection && selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+                    // Fallback: handle any existing selection
                     handleSelection();
                   }
-                }, 50);
+                }, 10);
               }}
               title={btn.title}
               className={`p-2 h-8 w-8 ${
