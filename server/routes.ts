@@ -81,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Protected admin routes
+  // Protected admin routes  
   app.get("/api/admin/posts", async (req, res) => {
     try {
       const { status, limit } = req.query;
@@ -90,6 +90,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching admin posts:", error);
       res.status(500).json({ message: "Failed to fetch posts" });
+    }
+  });
+
+  app.get("/api/admin/posts/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const post = await storage.getPost(id);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching post:", error);
+      res.status(500).json({ message: "Failed to fetch post" });
     }
   });
 

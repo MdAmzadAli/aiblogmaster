@@ -51,10 +51,11 @@ export default function AdminLayout() {
   // Set up real-time updates using polling
   useEffect(() => {
     const interval = setInterval(() => {
-      // Invalidate queries to trigger refetch for real-time updates
+      // Invalidate all admin-related queries to trigger refetch for real-time updates
       queryClient.invalidateQueries({ queryKey: ["/api/admin/posts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
-    }, 10000); // Update every 10 seconds
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics/summary"] });
+    }, 5000); // Update every 5 seconds for better real-time feel
 
     return () => clearInterval(interval);
   }, []);
@@ -358,7 +359,7 @@ function AdminDashboard() {
                 </SelectContent>
               </Select>
             </div>
-            <Link href="/admin/posts/new">
+            <Link href="/post-editor">
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
                 New Post
@@ -388,7 +389,7 @@ function AdminDashboard() {
                 }
               </p>
               {!searchTerm && statusFilter === "all" && (
-                <Link href="/admin/posts/new">
+                <Link href="/post-editor">
                   <Button>
                     <Plus className="w-4 h-4 mr-2" />
                     Create Your First Post
@@ -406,7 +407,7 @@ function AdminDashboard() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600">
-                          <Link href={`/admin/posts/edit/${post.id}`}>
+                          <Link href={`/post-editor?edit=${post.id}`}>
                             {post.title}
                           </Link>
                         </h3>
@@ -447,7 +448,7 @@ function AdminDashboard() {
                         </Link>
                       )}
                       
-                      <Link href={`/admin/posts/edit/${post.id}`}>
+                      <Link href={`/post-editor?edit=${post.id}`}>
                         <Button variant="ghost" size="sm" title="Edit Post">
                           <Edit className="w-4 h-4" />
                         </Button>

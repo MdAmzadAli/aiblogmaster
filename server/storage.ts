@@ -70,7 +70,7 @@ export class DatabaseStorage implements IStorage {
 
   // Post operations
   async getPosts(limit = 50, status?: string): Promise<Post[]> {
-    if (status) {
+    if (status && status !== 'undefined') {
       return await db.select().from(posts)
         .where(eq(posts.status, status))
         .orderBy(desc(posts.createdAt))

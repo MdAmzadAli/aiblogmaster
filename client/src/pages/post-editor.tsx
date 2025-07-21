@@ -27,7 +27,10 @@ export default function PostEditor() {
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   
-  const postId = params.id ? parseInt(params.id) : null;
+  // Support both URL params (/post-editor/:id) and query params (/post-editor?edit=id)
+  const urlSearchParams = new URLSearchParams(location.split('?')[1] || '');
+  const editPostId = urlSearchParams.get('edit');
+  const postId = params.id ? parseInt(params.id) : (editPostId ? parseInt(editPostId) : null);
   const isEditing = !!postId;
   
   const [post, setPost] = useState({
