@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { setupNextJs } from "./nextIntegration";
 
 const app = express();
 app.use(express.json());
@@ -47,12 +48,19 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Keep the original React SPA functionality fully intact
-  // Future: Next.js integration can be added via environment variable toggle
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
+  // Check if Next.js should be enabled (default: true)
+  const useNextJs = process.env.USE_NEXTJS !== 'false';
+  
+  if (useNextJs) {
+    log('Starting with Next.js integration');
+    await setupNextJs(app);
   } else {
-    serveStatic(app);
+    log('Starting with React SPA (Vite)');
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT

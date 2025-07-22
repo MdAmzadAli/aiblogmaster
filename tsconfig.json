@@ -21,11 +21,11 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./client/src/*"],
-      "@/components/*": ["./client/src/components/*"],
-      "@/hooks/*": ["./client/src/hooks/*"],
-      "@/lib/*": ["./client/src/lib/*"],
-      "@/pages/*": ["./client/src/pages/*"],
+      "@/*": ["./*"],
+      "@/components/*": ["./components/*"],
+      "@/hooks/*": ["./hooks/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/pages/*": ["./pages/*"],
       "@shared/*": ["./shared/*"]
     }
   },

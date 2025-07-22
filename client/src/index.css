@@ -2,255 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(60, 4.8%, 95.9%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 90%);
-  --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(207, 90%, 54%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(60, 4.8%, 95.9%);
-  --secondary-foreground: hsl(24, 9.8%, 10%);
-  --accent: hsl(60, 4.8%, 95.9%);
-  --accent-foreground: hsl(24, 9.8%, 10%);
-  --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
-  --radius: 0.5rem;
-  
-  /* Blog-specific color variables */
-  --hero-gradient-from: hsl(207, 90%, 54%);
-  --hero-gradient-to: hsl(272, 100%, 55%);
-  --featured-bg: hsl(0, 0%, 98%);
-  --blog-card-bg: hsl(0, 0%, 100%);
-  --category-seo: hsl(138, 62%, 47%);
-  --category-ai: hsl(272, 100%, 55%);
-  --category-analytics: hsl(291, 64%, 42%);
-  --category-marketing: hsl(213, 94%, 68%);
-  --sidebar-bg: hsl(240, 10%, 3.9%);
-  --sidebar-foreground: hsl(0, 0%, 98%);
-}
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
 
-.dark {
-  --background: hsl(240, 10%, 3.9%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 10%, 3.9%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 3.9%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 15.9%);
-  --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(207, 90%, 54%);
-  --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(240, 3.7%, 15.9%);
-  --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(240, 3.7%, 15.9%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
-  --radius: 0.5rem;
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply bg-background text-foreground;
   }
 }
 
-@layer components {
-  .hero-gradient {
-    background: linear-gradient(135deg, var(--hero-gradient-from), var(--hero-gradient-to));
+@layer utilities {
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
   
-  .category-badge {
-    @apply text-xs px-3 py-1 rounded-full font-medium;
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
-  
-  .category-seo {
-    background-color: hsl(138, 62%, 95%);
-    color: hsl(138, 62%, 27%);
-  }
-  
-  .category-ai {
-    background-color: hsl(272, 100%, 95%);
-    color: hsl(272, 100%, 35%);
-  }
-  
-  .category-analytics {
-    background-color: hsl(291, 64%, 95%);
-    color: hsl(291, 64%, 22%);
-  }
-  
-  .category-marketing {
-    background-color: hsl(213, 94%, 95%);
-    color: hsl(213, 94%, 28%);
-  }
-  
-  .category-featured {
-    background-color: hsl(207, 90%, 95%);
-    color: hsl(207, 90%, 34%);
-  }
-  
-  .blog-card {
-    @apply bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100;
-  }
-  
-  .blog-card:hover {
-    transform: translateY(-2px);
-  }
-  
-  .ai-avatar {
-    @apply w-8 h-8 rounded-full flex items-center justify-center text-white text-sm;
-    background: linear-gradient(135deg, var(--hero-gradient-from), var(--hero-gradient-to));
-  }
-  
-  .admin-metric-card {
-    @apply bg-white p-6 rounded-xl shadow-sm border border-gray-100;
-  }
-  
-  .admin-panel {
-    @apply bg-gray-50 min-h-screen;
-  }
-  
-  .status-dot {
-    @apply w-3 h-3 rounded-full;
-  }
-  
-  .status-published {
-    @apply bg-emerald-500;
-  }
-  
-  .status-draft {
-    @apply bg-yellow-500;
-  }
-  
-  .status-scheduled {
-    @apply bg-blue-500;
-  }
-
-  /* Rich Editor Inline Heading Styles */
-  .inline-heading {
-    @apply inline;
-    display: inline !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    vertical-align: baseline;
-  }
-
-  .inline-heading.h1 {
-    font-size: 2rem !important;
-    font-weight: bold !important;
-    line-height: 1.2 !important;
-  }
-
-  .inline-heading.h2 {
-    font-size: 1.5rem !important;
-    font-weight: bold !important;
-    line-height: 1.3 !important;
-  }
-
-  .inline-heading.h3 {
-    font-size: 1.25rem !important;
-    font-weight: bold !important;
-    line-height: 1.4 !important;
-  }
-
-  /* Ensure floating toolbar stays visible */
-  .floating-toolbar {
-    z-index: 9999 !important;
-    pointer-events: auto !important;
-  }
-
-  /* Better paragraph spacing and clickability */
-  .prose p {
-    margin-bottom: 1.2em;
-    min-height: 1.5em;
-  }
-
-  /* Make empty paragraphs clickable */
-  [contenteditable="true"] p:empty:before {
-    content: "\00a0";
-    color: transparent;
-  }
-
-  [contenteditable="true"] div:empty:before {
-    content: "\00a0";
-    color: transparent;
-  }
-
-  /* Add spacing between paragraphs to improve clickability */
-  [contenteditable="true"] br:after {
-    content: "\00a0";
-    display: inline-block;
-    width: 0;
-  }
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: hsl(0, 0%, 95%);
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(0, 0%, 80%);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(0, 0%, 70%);
-}
-
-/* Animation utilities */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-/* Loading states */
-.skeleton {
-  @apply animate-pulse bg-gray-200 rounded;
-}
-
-.loading-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* Chart container */
-.chart-container {
-  position: relative;
-  width: 100%;
-  height: 300px;
 }
