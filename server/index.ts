@@ -47,8 +47,9 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Keep the original React SPA functionality fully intact
-  // Future: Next.js integration can be added via environment variable toggle
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
