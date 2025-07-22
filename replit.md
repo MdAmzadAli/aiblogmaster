@@ -21,12 +21,16 @@ The application follows a monorepo structure with separate client and server dir
 ## Key Components
 
 ### Frontend Architecture
-- **Framework**: Next.js 14 with React 18 and TypeScript
-- **Routing**: Next.js App Router with static and server-side rendering
-- **State Management**: TanStack Query (React Query) for server state
+- **Framework**: Next.js 14 with React 18 and TypeScript (Pages Router for maximum SEO control)
+- **Rendering**: Static Site Generation (SSG) with Incremental Static Regeneration (ISR)
+- **Server-Side Rendering**: getServerSideProps for dynamic content like blog listings
+- **Static Generation**: getStaticProps with revalidation for posts and categories
+- **State Management**: TanStack Query (React Query) for client-side state and API calls
 - **UI Framework**: Tailwind CSS with Radix UI components (shadcn/ui)
-- **Image Optimization**: Next.js Image component with lazy loading and WebP conversion
-- **SEO**: Advanced SEO optimization with structured data, meta tags, and sitemaps
+- **Image Optimization**: Next.js Image component with WebP/AVIF formats and responsive sizing
+- **SEO**: Comprehensive SEO with JSON-LD structured data, Open Graph, Twitter Cards
+- **Performance**: Core Web Vitals optimization with preloading and caching strategies
+- **PWA**: Progressive Web App features with manifest and service worker support
 
 ### Backend Architecture
 - **Framework**: Express.js with TypeScript
@@ -189,3 +193,10 @@ The platform is designed to be self-maintaining through AI automation while prov
 - ✓ **Error Pages**: Custom 404 and 500 error pages with proper SEO
 - ✓ **Category Pages**: Dynamic category pages with static generation
 - ✓ **Blog Listing**: Optimized blog listing with pagination and filtering
+- ✓ **Incremental Static Regeneration**: ISR configured for dynamic content updates
+- ✓ **Meta Tags**: Complete Open Graph, Twitter Cards, and JSON-LD structured data
+- ✓ **PWA Support**: Manifest.json and service worker ready configuration
+- ✓ **Core Web Vitals**: Optimized for LCP, FID, and CLS performance metrics
+- ✓ **Breadcrumbs**: SEO-friendly breadcrumb navigation with structured data
+- ✓ **Canonical URLs**: Proper canonical URL configuration for all pages
+- ✓ **Advanced Caching**: HTTP headers for optimal caching strategies
