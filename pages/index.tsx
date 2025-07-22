@@ -340,12 +340,8 @@ export const getStaticProps: GetStaticProps<HomePageProps> = async () => {
       fetch(`${baseUrl}/api/posts?limit=6`)
     ])
 
-    const featuredPost = featuredResponse.ok && featuredResponse.headers.get('content-length') !== '0' 
-      ? await featuredResponse.json() 
-      : null
-    const posts = postsResponse.ok && postsResponse.headers.get('content-length') !== '0' 
-      ? await postsResponse.json() 
-      : []
+    const featuredPost = featuredResponse.ok ? await featuredResponse.json() : null
+    const posts = postsResponse.ok ? await postsResponse.json() : []
     
     // Extract unique categories
     const categories = [...new Set(posts.map((post: Post) => post.category))].filter(Boolean) as string[]
