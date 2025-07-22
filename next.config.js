@@ -1,4 +1,4 @@
-// @ts-check
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
     appDir: false // Using pages directory for better SEO control
@@ -61,4 +61,4 @@ const nextConfig = {
   }
 }
 
-export default nextConfig
+module.exports = nextConfig
