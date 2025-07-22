@@ -12,6 +12,7 @@ import {
 import { insertPostSchema, insertAutomationSettingsSchema } from "@shared/schema";
 import { registerSitemapRoutes } from "./routes/sitemap";
 import { generatePostSSR, generateHomeSSR } from "./ssr";
+import { staticGenerator } from "./staticGeneration";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize authentication
@@ -23,40 +24,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register SEO routes (sitemap, robots.txt)
   registerSitemapRoutes(app);
 
-  // Server-side rendering for SEO (only in production)
-  if (process.env.NODE_ENV === 'production') {
-    app.get('/post/:slug', async (req, res, next) => {
-      try {
-        const { slug } = req.params;
+  // Static generation routes (Next.js getStaticProps equivalent)
+  app.get('/static/post/:slug', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const staticHTML = await staticGenerator.serveStaticContent(slug);
+      
+      if (staticHTML) {
+        res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
+        res.send(staticHTML);
+      } else {
+        res.status(404).json({ message: 'Static page not found' });
+      }
+    } catch (error) {
+      console.error('Static generation error:', error);
+      res.status(500).json({ message: 'Error serving static content' });
+    }
+  });
+
+  // Build static site endpoint (admin only)
+  app.post('/api/build-static', isAuthenticated, async (req: any, res) => {
+    try {
+      console.log('🏗️  Static site generation requested by admin');
+      const result = await staticGenerator.buildStaticSite();
+      res.json({
+        message: 'Static site generation completed',
+        ...result
+      });
+    } catch (error) {
+      console.error('Static generation failed:', error);
+      res.status(500).json({ message: 'Static generation failed' });
+    }
+  });
+
+  // Server-side rendering for SEO (fallback for non-static pages)
+  app.get('/post/:slug', async (req, res, next) => {
+    try {
+      const { slug } = req.params;
+      
+      // Try to serve static content first (Next.js getStaticProps equivalent)
+      const staticHTML = await staticGenerator.serveStaticContent(slug);
+      if (staticHTML) {
+        res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
+        res.setHeader('X-Static-Generation', 'true');
+        return res.send(staticHTML);
+      }
+
+      // Fallback to SSR if no static version exists
+      if (process.env.NODE_ENV === 'production') {
         const baseUrl = `${req.protocol}://${req.get('host')}`;
         const ssrHtml = await generatePostSSR(slug, baseUrl);
         
         if (ssrHtml) {
           res.setHeader('Content-Type', 'text/html');
+          res.setHeader('X-Static-Generation', 'false');
           res.send(ssrHtml);
         } else {
-          // Fall back to SPA routing
           next();
         }
-      } catch (error) {
-        console.error('SSR error:', error);
+      } else {
         next();
       }
-    });
-
-    app.get('/', async (req, res, next) => {
-      try {
-        const baseUrl = `${req.protocol}://${req.get('host')}`;
-        const ssrHtml = await generateHomeSSR(baseUrl);
-        
-        res.setHeader('Content-Type', 'text/html');
-        res.send(ssrHtml);
-      } catch (error) {
-        console.error('SSR error:', error);
-        next();
-      }
-    });
-  }
+    } catch (error) {
+      console.error('Page rendering error:', error);
+      next();
+    }
+  });
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
