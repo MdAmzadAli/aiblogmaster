@@ -5,7 +5,7 @@ import type { Post } from '../shared/schema';
 // Handler for blog home page with SEO optimization
 export async function handleBlogHome(req: Request, res: Response) {
   try {
-    const posts = await storage.getAllPosts();
+    const posts = await storage.posts.getAll();
     const featuredPosts = posts.filter((p: Post) => p.status === 'published').slice(0, 3);
     
     const optimizedHtml = `<!DOCTYPE html>
@@ -47,7 +47,7 @@ export async function handleBlogHome(req: Request, res: Response) {
       "name": "AI Blog Platform"
     },
     "blogPost": [
-      ${featuredPosts.map((post: Post) => `{
+      ${featuredPosts.map(post => `{
         "@type": "BlogPosting",
         "headline": "${post.title}",
         "description": "${post.excerpt || post.metaDescription}",
@@ -195,7 +195,7 @@ export async function handleBlogHome(req: Request, res: Response) {
                 <h3 class="post-title">${post.title}</h3>
                 <p class="post-excerpt">${(post.excerpt || post.metaDescription || '').substring(0, 120)}...</p>
                 <div class="post-meta">
-                  <span>${new Date(post.publishedAt || post.createdAt || new Date()).toLocaleDateString()}</span>
+                  <span>${new Date(post.publishedAt || post.createdAt).toLocaleDateString()}</span>
                   <a href="/blog/${post.slug}" class="read-more">Read More</a>
                 </div>
               </div>
@@ -250,7 +250,7 @@ export async function handleBlogHome(req: Request, res: Response) {
 export async function handleBlogPost(req: Request, res: Response) {
   try {
     const { slug } = req.params;
-    const post = await storage.getPostBySlug(slug);
+    const post = await storage.posts.getBySlug(slug);
     
     if (!post || post.status !== 'published') {
       return res.status(404).send('Post not found');
