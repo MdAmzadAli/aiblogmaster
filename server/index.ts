@@ -1,8 +1,24 @@
 import express, { type Request, Response, NextFunction } from "express";
+import compression from "compression";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// Enable GZIP compression for all responses
+app.use(compression({
+  filter: (req, res) => {
+    // Don't compress already compressed assets
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // Use compression filter for everything else
+    return compression.filter(req, res);
+  },
+  level: 6, // Good balance between compression ratio and speed
+  threshold: 1024, // Only compress responses larger than 1KB
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
