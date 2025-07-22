@@ -11,7 +11,7 @@ import AdminLayout from "@/pages/admin";
 import Post from "@/pages/post";
 import PostEditor from "@/pages/post-editor";
 import { SEOTestDashboard } from "@/components/seo-test-dashboard";
-import { LiveSEOMonitor } from "@/components/live-seo-monitor";
+
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -35,7 +35,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
-        <LiveSEOMonitor />
+
       </TooltipProvider>
     </QueryClientProvider>
   );

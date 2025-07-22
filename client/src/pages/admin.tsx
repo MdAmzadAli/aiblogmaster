@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnalyticsChart from "@/components/analytics-chart";
 import { 
   Settings, 
@@ -40,9 +41,12 @@ import {
   TrendingUp,
   XCircle,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  MonitorCheck,
+  Activity
 } from "lucide-react";
 import RichEditor from "@/components/rich-editor";
+import { LiveSEOMonitor } from "@/components/live-seo-monitor";
 
 export default function AdminLayout() {
   const { toast } = useToast();
@@ -875,7 +879,20 @@ function SEOAnalyzer() {
         <p className="text-gray-600 mt-1">Analyze and optimize your content for search engines</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Tabs defaultValue="content-analyzer" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="content-analyzer" className="flex items-center">
+            <Target className="w-4 h-4 mr-2" />
+            Content Analyzer
+          </TabsTrigger>
+          <TabsTrigger value="live-monitor" className="flex items-center">
+            <Activity className="w-4 h-4 mr-2" />
+            Live SEO Monitor
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="content-analyzer" className="mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Input Form */}
         <Card>
           <CardHeader>
@@ -996,7 +1013,13 @@ function SEOAnalyzer() {
             )}
           </CardContent>
         </Card>
-      </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="live-monitor" className="mt-6">
+          <LiveSEOMonitor />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

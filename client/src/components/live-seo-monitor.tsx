@@ -107,7 +107,7 @@ export function LiveSEOMonitor() {
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     if (navigation) {
       const ttfb = navigation.responseStart - navigation.requestStart;
-      const loadTime = navigation.loadEventEnd - navigation.navigationStart;
+      const loadTime = navigation.loadEventEnd - navigation.startTime;
       
       if (ttfb > 800) {
         warnings.push(`High TTFB: ${ttfb.toFixed(0)}ms`);
