@@ -1,0 +1,245 @@
+/* Non-critical CSS - loaded asynchronously */
+/* This file contains styles for below-the-fold content and interactive elements */
+
+@tailwind utilities;
+
+/* Extended color palette */
+:root {
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  
+  /* Blog-specific colors */
+  --featured-bg: hsl(0, 0%, 98%);
+  --blog-card-bg: hsl(0, 0%, 100%);
+  --category-seo: hsl(138, 62%, 47%);
+  --category-ai: hsl(272, 100%, 55%);
+  --category-analytics: hsl(291, 64%, 42%);
+  --category-marketing: hsl(213, 94%, 68%);
+  --category-performance: hsl(45, 93%, 47%);
+  --category-design: hsl(290, 84%, 60%);
+  --sidebar-bg: hsl(240, 10%, 3.9%);
+  --sidebar-foreground: hsl(0, 0%, 98%);
+}
+
+/* Dark theme colors */
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+}
+
+/* Component styles */
+.category-badge {
+  @apply text-xs px-3 py-1 rounded-full font-medium;
+}
+
+.category-seo {
+  background-color: hsl(138, 62%, 95%);
+  color: hsl(138, 62%, 27%);
+}
+
+.category-ai,
+.category-ai-technology {
+  background-color: hsl(272, 100%, 95%);
+  color: hsl(272, 100%, 35%);
+}
+
+.category-analytics {
+  background-color: hsl(291, 64%, 95%);
+  color: hsl(291, 64%, 22%);
+}
+
+.category-marketing {
+  background-color: hsl(213, 94%, 95%);
+  color: hsl(213, 94%, 28%);
+}
+
+.category-performance {
+  background-color: hsl(45, 93%, 95%);
+  color: hsl(45, 93%, 27%);
+}
+
+.category-development {
+  background-color: hsl(138, 62%, 95%);
+  color: hsl(138, 62%, 27%);
+}
+
+.category-design {
+  background-color: hsl(290, 84%, 95%);
+  color: hsl(290, 84%, 30%);
+}
+
+.category-featured {
+  background-color: hsl(207, 90%, 95%);
+  color: hsl(207, 90%, 34%);
+}
+
+/* Blog card styles */
+.blog-card {
+  @apply bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100;
+}
+
+.blog-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Admin components */
+.ai-avatar {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-white text-sm;
+  background: linear-gradient(135deg, var(--hero-gradient-from), var(--hero-gradient-to));
+}
+
+.admin-metric-card {
+  @apply bg-white p-6 rounded-xl shadow-sm border border-gray-100;
+}
+
+.admin-panel {
+  @apply bg-gray-50 min-h-screen;
+}
+
+/* Interactive elements */
+.prose {
+  @apply max-w-none;
+}
+
+.prose h1 {
+  @apply text-3xl font-bold mb-6 text-gray-900;
+}
+
+.prose h2 {
+  @apply text-2xl font-semibold mb-4 mt-8 text-gray-900;
+}
+
+.prose h3 {
+  @apply text-xl font-semibold mb-3 mt-6 text-gray-900;
+}
+
+.prose p {
+  @apply mb-4 leading-relaxed text-gray-700;
+}
+
+.prose ul, .prose ol {
+  @apply mb-4 pl-6;
+}
+
+.prose li {
+  @apply mb-2;
+}
+
+.prose pre {
+  @apply bg-gray-100 rounded-lg p-4 overflow-x-auto mb-4;
+}
+
+.prose code {
+  @apply bg-gray-100 px-2 py-1 rounded text-sm font-mono;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-blue-500 pl-4 italic text-gray-600 mb-4;
+}
+
+/* Reading progress bar */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--scroll-progress, 0%);
+  height: 3px;
+  background: linear-gradient(90deg, var(--hero-gradient-from), var(--hero-gradient-to));
+  z-index: 100;
+  transition: width 0.1s ease-out;
+}
+
+/* Social sharing buttons */
+.social-share-button {
+  @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors duration-200;
+}
+
+.social-share-facebook {
+  @apply bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100;
+}
+
+.social-share-twitter {
+  @apply bg-sky-50 text-sky-600 border-sky-200 hover:bg-sky-100;
+}
+
+.social-share-linkedin {
+  @apply bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .prose h1 {
+    @apply text-2xl;
+  }
+  
+  .prose h2 {
+    @apply text-xl;
+  }
+  
+  .prose h3 {
+    @apply text-lg;
+  }
+  
+  .category-badge {
+    @apply text-xs px-2 py-0.5;
+  }
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Loading states */
+.skeleton-pulse {
+  @apply animate-pulse bg-gray-200 rounded;
+}
+
+/* SEO and performance optimizations */
+.lazy-image {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.lazy-image.loaded {
+  opacity: 1;
+}

@@ -7,7 +7,7 @@ const app = express();
 
 // Enable GZIP compression for all responses
 app.use(compression({
-  filter: (req, res) => {
+  filter: (req: any, res: any) => {
     // Don't compress already compressed assets
     if (req.headers['x-no-compression']) {
       return false;
