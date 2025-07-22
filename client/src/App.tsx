@@ -10,6 +10,8 @@ import Home from "@/pages/home";
 import AdminLayout from "@/pages/admin";
 import Post from "@/pages/post";
 import PostEditor from "@/pages/post-editor";
+import { SEOTestDashboard } from "@/components/seo-test-dashboard";
+import { LiveSEOMonitor } from "@/components/live-seo-monitor";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -21,6 +23,7 @@ function Router() {
       <Route path="/post-editor" component={PostEditor} />
       <Route path="/post-editor/:id" component={PostEditor} />
       <Route path="/post/:slug" component={Post} />
+      <Route path="/seo-test" component={SEOTestDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -32,6 +35,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <LiveSEOMonitor />
       </TooltipProvider>
     </QueryClientProvider>
   );
