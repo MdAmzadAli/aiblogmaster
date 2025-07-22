@@ -1,0 +1,344 @@
+{
+  "summary": {
+    "avgPerformanceGrade": 92,
+    "avgSeoScore": 59,
+    "avgResponseTime": 73,
+    "staticPages": 1,
+    "compressedPages": 5,
+    "criticalIssues": 4,
+    "importantIssues": 6
+  },
+  "recommendations": {
+    "critical": [
+      "/: Missing H1 tag",
+      "/: Missing canonical URL",
+      "/blog: Missing H1 tag",
+      "/blog: Missing canonical URL"
+    ],
+    "important": [
+      "/: Title should be 30-60 characters",
+      "/: Meta description should be 120-160 characters",
+      "/blog: Title should be 30-60 characters",
+      "/blog: Meta description should be 120-160 characters",
+      "/post/web-performance-optimization-guide-2025: Title should be 30-60 characters",
+      "/static/post/web-performance-optimization-guide-2025: Title should be 30-60 characters"
+    ],
+    "suggested": [
+      "/: Improve cache headers",
+      "/blog: Improve cache headers",
+      "/api/posts: Improve cache headers",
+      "/: Add alt text to images",
+      "/blog: Add alt text to images",
+      "/post/web-performance-optimization-guide-2025: Add alt text to images",
+      "/post/web-performance-optimization-guide-2025: Add preconnect for external resources",
+      "/static/post/web-performance-optimization-guide-2025: Add alt text to images",
+      "/static/post/web-performance-optimization-guide-2025: Add preconnect for external resources"
+    ]
+  },
+  "fullResults": {
+    "artillery": null,
+    "seo": {
+      "/": {
+        "url": "http://localhost:5000/",
+        "seoScore": 46,
+        "checks": {
+          "hasTitle": true,
+          "hasTitleLength": false,
+          "hasMetaDescription": true,
+          "hasMetaDescriptionLength": false,
+          "hasH1": false,
+          "hasMultipleH1": false,
+          "hasHeadingHierarchy": false,
+          "hasCanonical": false,
+          "hasViewport": true,
+          "hasRobots": true,
+          "hasLangAttribute": true,
+          "hasOpenGraph": true,
+          "hasOgTitle": false,
+          "hasOgDescription": false,
+          "hasOgImage": false,
+          "hasOgUrl": false,
+          "hasTwitterCard": true,
+          "hasStructuredData": true,
+          "hasMetaKeywords": true,
+          "hasImageAlt": false,
+          "hasInternalLinks": false,
+          "hasPreconnect": true,
+          "hasPrefetch": false,
+          "hasPreload": true
+        },
+        "issues": [
+          "Missing H1 tag",
+          "Missing canonical URL"
+        ],
+        "warnings": [
+          "Title should be 30-60 characters",
+          "Meta description should be 120-160 characters"
+        ],
+        "recommendations": [
+          "Add alt text to images"
+        ],
+        "elements": {
+          "title": "AI Blog Platform - Automated SEO-Optimized Content Generation",
+          "titleLength": 61,
+          "description": "AI-powered blog platform with automated SEO optimization and content generation",
+          "descriptionLength": 79,
+          "h1": null,
+          "keywords": "AI blog, SEO optimization, content generation, automated blogging, artificial intelligence"
+        }
+      },
+      "/blog": {
+        "url": "http://localhost:5000/blog",
+        "seoScore": 46,
+        "checks": {
+          "hasTitle": true,
+          "hasTitleLength": false,
+          "hasMetaDescription": true,
+          "hasMetaDescriptionLength": false,
+          "hasH1": false,
+          "hasMultipleH1": false,
+          "hasHeadingHierarchy": false,
+          "hasCanonical": false,
+          "hasViewport": true,
+          "hasRobots": true,
+          "hasLangAttribute": true,
+          "hasOpenGraph": true,
+          "hasOgTitle": false,
+          "hasOgDescription": false,
+          "hasOgImage": false,
+          "hasOgUrl": false,
+          "hasTwitterCard": true,
+          "hasStructuredData": true,
+          "hasMetaKeywords": true,
+          "hasImageAlt": false,
+          "hasInternalLinks": false,
+          "hasPreconnect": true,
+          "hasPrefetch": false,
+          "hasPreload": true
+        },
+        "issues": [
+          "Missing H1 tag",
+          "Missing canonical URL"
+        ],
+        "warnings": [
+          "Title should be 30-60 characters",
+          "Meta description should be 120-160 characters"
+        ],
+        "recommendations": [
+          "Add alt text to images"
+        ],
+        "elements": {
+          "title": "AI Blog Platform - Automated SEO-Optimized Content Generation",
+          "titleLength": 61,
+          "description": "AI-powered blog platform with automated SEO optimization and content generation",
+          "descriptionLength": 79,
+          "h1": null,
+          "keywords": "AI blog, SEO optimization, content generation, automated blogging, artificial intelligence"
+        }
+      },
+      "/post/web-performance-optimization-guide-2025": {
+        "url": "http://localhost:5000/post/web-performance-optimization-guide-2025",
+        "seoScore": 71,
+        "checks": {
+          "hasTitle": true,
+          "hasTitleLength": false,
+          "hasMetaDescription": true,
+          "hasMetaDescriptionLength": true,
+          "hasH1": true,
+          "hasMultipleH1": false,
+          "hasHeadingHierarchy": true,
+          "hasCanonical": true,
+          "hasViewport": true,
+          "hasRobots": true,
+          "hasLangAttribute": true,
+          "hasOpenGraph": true,
+          "hasOgTitle": true,
+          "hasOgDescription": true,
+          "hasOgImage": true,
+          "hasOgUrl": true,
+          "hasTwitterCard": true,
+          "hasStructuredData": true,
+          "hasMetaKeywords": true,
+          "hasImageAlt": false,
+          "hasInternalLinks": false,
+          "hasPreconnect": false,
+          "hasPrefetch": false,
+          "hasPreload": false
+        },
+        "issues": [],
+        "warnings": [
+          "Title should be 30-60 characters"
+        ],
+        "recommendations": [
+          "Add alt text to images",
+          "Add preconnect for external resources"
+        ],
+        "elements": {
+          "title": "Complete Guide to Web Performance Optimization in 2025 | AI Blog Platform",
+          "titleLength": 73,
+          "description": "Complete guide to web performance optimization in 2025. Learn Core Web Vitals, image optimization, JavaScript performance, and CSS optimization techniques.",
+          "descriptionLength": 155,
+          "h1": "Complete Guide to Web Performance Optimization in 2025",
+          "keywords": "web performance, core web vitals, optimization, page speed, SEO, website performance, loading speed"
+        }
+      },
+      "/static/post/web-performance-optimization-guide-2025": {
+        "url": "http://localhost:5000/static/post/web-performance-optimization-guide-2025",
+        "seoScore": 71,
+        "checks": {
+          "hasTitle": true,
+          "hasTitleLength": false,
+          "hasMetaDescription": true,
+          "hasMetaDescriptionLength": true,
+          "hasH1": true,
+          "hasMultipleH1": false,
+          "hasHeadingHierarchy": true,
+          "hasCanonical": true,
+          "hasViewport": true,
+          "hasRobots": true,
+          "hasLangAttribute": true,
+          "hasOpenGraph": true,
+          "hasOgTitle": true,
+          "hasOgDescription": true,
+          "hasOgImage": true,
+          "hasOgUrl": true,
+          "hasTwitterCard": true,
+          "hasStructuredData": true,
+          "hasMetaKeywords": true,
+          "hasImageAlt": false,
+          "hasInternalLinks": false,
+          "hasPreconnect": false,
+          "hasPrefetch": false,
+          "hasPreload": false
+        },
+        "issues": [],
+        "warnings": [
+          "Title should be 30-60 characters"
+        ],
+        "recommendations": [
+          "Add alt text to images",
+          "Add preconnect for external resources"
+        ],
+        "elements": {
+          "title": "Complete Guide to Web Performance Optimization in 2025 | AI Blog Platform",
+          "titleLength": 73,
+          "description": "Complete guide to web performance optimization in 2025. Learn Core Web Vitals, image optimization, JavaScript performance, and CSS optimization techniques.",
+          "descriptionLength": 155,
+          "h1": "Complete Guide to Web Performance Optimization in 2025",
+          "keywords": "web performance, core web vitals, optimization, page speed, SEO, website performance, loading speed"
+        }
+      }
+    },
+    "performance": {
+      "/": {
+        "url": "http://localhost:5000/",
+        "measurements": {
+          "count": 10,
+          "avgResponseTime": 17.741,
+          "minResponseTime": 11.13,
+          "maxResponseTime": 43.29,
+          "p95ResponseTime": 43.29,
+          "avgSize": 46519,
+          "isStatic": false,
+          "isCompressed": true,
+          "cacheControl": null
+        },
+        "grade": 90,
+        "priority": "HIGH",
+        "vitals": {
+          "fcp": 845,
+          "lcp": 1345,
+          "cls": 0,
+          "fid": 120,
+          "tbt": 268
+        }
+      },
+      "/blog": {
+        "url": "http://localhost:5000/blog",
+        "measurements": {
+          "count": 10,
+          "avgResponseTime": 10.163,
+          "minResponseTime": 8.34,
+          "maxResponseTime": 13.5,
+          "p95ResponseTime": 13.5,
+          "avgSize": 46519,
+          "isStatic": false,
+          "isCompressed": true,
+          "cacheControl": null
+        },
+        "grade": 90,
+        "priority": "HIGH",
+        "vitals": {
+          "fcp": 845,
+          "lcp": 1345,
+          "cls": 0,
+          "fid": 120,
+          "tbt": 268
+        }
+      },
+      "/post/web-performance-optimization-guide-2025": {
+        "url": "http://localhost:5000/post/web-performance-optimization-guide-2025",
+        "measurements": {
+          "count": 10,
+          "avgResponseTime": 4.087999999999999,
+          "minResponseTime": 3.49,
+          "maxResponseTime": 4.92,
+          "p95ResponseTime": 4.92,
+          "avgSize": 7455,
+          "isStatic": true,
+          "isCompressed": true,
+          "cacheControl": "public, max-age=3600, s-maxage=3600"
+        },
+        "grade": 100,
+        "priority": "MEDIUM",
+        "vitals": {
+          "fcp": 205,
+          "lcp": 405,
+          "cls": 0.03,
+          "fid": 20,
+          "tbt": 65
+        }
+      },
+      "/static/post/web-performance-optimization-guide-2025": {
+        "url": "http://localhost:5000/static/post/web-performance-optimization-guide-2025",
+        "measurements": {
+          "count": 10,
+          "avgResponseTime": 4.315,
+          "minResponseTime": 3.56,
+          "maxResponseTime": 6.7,
+          "p95ResponseTime": 6.7,
+          "avgSize": 7455,
+          "isStatic": false,
+          "isCompressed": true,
+          "cacheControl": "public, max-age=3600, s-maxage=3600"
+        },
+        "grade": 100,
+        "priority": "MEDIUM",
+        "vitals": {
+          "fcp": 205,
+          "lcp": 405,
+          "cls": 0.03,
+          "fid": 20,
+          "tbt": 65
+        }
+      },
+      "/api/posts": {
+        "url": "http://localhost:5000/api/posts",
+        "measurements": {
+          "count": 10,
+          "avgResponseTime": 330.14099999999996,
+          "minResponseTime": 74.04,
+          "maxResponseTime": 2626.97,
+          "p95ResponseTime": 2626.97,
+          "avgSize": 12725,
+          "isStatic": false,
+          "isCompressed": true,
+          "cacheControl": null
+        },
+        "grade": 80,
+        "priority": "LOW"
+      }
+    },
+    "recommendations": []
+  }
+}
