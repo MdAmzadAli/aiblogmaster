@@ -107,7 +107,9 @@ export default function Landing() {
                 <div className="md:w-1/2">
                   <img 
                     src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500" 
-                    alt="AI Technology Workspace" 
+                    alt="AI-powered content creation workspace with analytics and SEO optimization tools"
+                    loading="eager"
+                    decoding="async" 
                     className="w-full h-64 md:h-full object-cover"
                   />
                 </div>

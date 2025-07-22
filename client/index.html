@@ -23,12 +23,41 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate icon" href="/favicon.ico" />
     
-    <!-- Preconnect to external domains for performance -->
+    <!-- Performance optimizations -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/src/main.tsx" as="script" crossorigin />
+    <link rel="preload" href="/src/index.css" as="style" />
     
     <!-- Default title - will be updated by components -->
     <title>AI Blog Platform - Automated SEO-Optimized Content Generation</title>
+    
+    <!-- Additional SEO and Performance meta tags -->
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <meta name="bingbot" content="index, follow" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    
+    <!-- Structured data for Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "AI Blog Platform",
+      "url": "https://ai-blog-platform.replit.app",
+      "logo": "https://ai-blog-platform.replit.app/logo.png",
+      "description": "AI-powered blog platform with automated SEO optimization and content generation",
+      "foundingDate": "2025",
+      "sameAs": [
+        "https://twitter.com/AIBlogPlatform",
+        "https://linkedin.com/company/ai-blog-platform"
+      ]
+    }
+    </script>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

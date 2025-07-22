@@ -6,7 +6,7 @@ export default function HeroSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center">
           <h1 className="text-5xl font-bold mb-6 animate-fade-in-up">
-            AI-Powered Blog Platform
+            AI-Powered Blog Platform - Automated SEO Content Generation
           </h1>
           <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             Discover insights powered by artificial intelligence. Our AI creates SEO-optimized content automatically, delivering fresh perspectives weekly.
