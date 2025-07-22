@@ -34,6 +34,7 @@ export interface IStorage {
   // Analytics operations
   getPostAnalytics(postId: number): Promise<PostAnalytics[]>;
   recordPostView(postId: number, isUnique: boolean): Promise<void>;
+  incrementPostViews(postId: number): Promise<void>;
   getAnalyticsSummary(): Promise<{
     totalPosts: number;
     totalViews: number;
@@ -172,6 +173,34 @@ export class DatabaseStorage implements IStorage {
         postId,
         views: 1,
         uniqueViews: isUnique ? 1 : 0,
+        date: today,
+      });
+    }
+  }
+
+  async incrementPostViews(postId: number): Promise<void> {
+    // Simple increment - for more sophisticated tracking, use recordPostView
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [existing] = await db
+      .select()
+      .from(postAnalytics)
+      .where(and(
+        eq(postAnalytics.postId, postId),
+        gte(postAnalytics.date, today)
+      ));
+
+    if (existing) {
+      await db
+        .update(postAnalytics)
+        .set({ views: existing.views + 1 })
+        .where(eq(postAnalytics.id, existing.id));
+    } else {
+      await db.insert(postAnalytics).values({
+        postId,
+        views: 1,
+        uniqueViews: 1,
         date: today,
       });
     }

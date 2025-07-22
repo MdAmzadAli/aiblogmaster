@@ -4,7 +4,13 @@ import Navigation from "@/components/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, Eye, User, Share2, Facebook, Twitter, Linkedin } from "lucide-react";
+import { Calendar, Clock, Eye, User } from "lucide-react";
+import { SEOHead } from "@/components/seo-head";
+import { ArticleStructuredData, BreadcrumbStructuredData } from "@/components/structured-data";
+import { SocialSharing } from "@/components/social-sharing";
+import { ReadingProgress } from "@/components/reading-progress";
+import { Breadcrumb } from "@/components/breadcrumb";
+import { useViewTracker } from "@/hooks/use-view-tracker";
 import type { Post as PostType } from "@shared/schema";
 
 export default function Post() {
@@ -65,6 +71,9 @@ export default function Post() {
   const publishedDate = typedPost.publishedAt ? new Date(typedPost.publishedAt) : new Date();
   const readingTime = Math.ceil(typedPost.content.length / 1000); // Rough estimate
 
+  // Track page view for analytics
+  useViewTracker(typedPost.id, typedPost.slug);
+
   const getCategoryColor = (category: string) => {
     const lowerCategory = category.toLowerCase();
     if (lowerCategory.includes('seo')) return 'category-seo';
@@ -77,11 +86,67 @@ export default function Post() {
   const shareUrl = window.location.href;
   const shareTitle = typedPost.title;
 
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const postUrl = `${siteUrl}/post/${typedPost.slug}`;
+  const imageUrl = typedPost.featuredImage || `${siteUrl}/og-default.jpg`;
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <ReadingProgress />
+      <SEOHead
+        title={typedPost.title}
+        description={typedPost.metaDescription || typedPost.excerpt}
+        keywords={typedPost.keywords || []}
+        image={imageUrl}
+        url={`/post/${typedPost.slug}`}
+        type="article"
+        author={typedPost.isAiGenerated ? "AI Assistant" : "Human Author"}
+        publishedTime={typedPost.publishedAt ? new Date(typedPost.publishedAt).toISOString() : 
+                      typedPost.createdAt ? new Date(typedPost.createdAt).toISOString() : 
+                      new Date().toISOString()}
+        modifiedTime={typedPost.updatedAt ? new Date(typedPost.updatedAt).toISOString() : 
+                     typedPost.createdAt ? new Date(typedPost.createdAt).toISOString() : 
+                     new Date().toISOString()}
+        section={typedPost.category}
+        tags={typedPost.keywords || []}
+        canonicalUrl={postUrl}
+      />
+      <ArticleStructuredData
+        title={typedPost.title}
+        description={typedPost.metaDescription || typedPost.excerpt}
+        url={postUrl}
+        image={imageUrl}
+        author={typedPost.isAiGenerated ? "AI Assistant" : "Human Author"}
+        publishedDate={typedPost.publishedAt ? new Date(typedPost.publishedAt).toISOString() : 
+                       typedPost.createdAt ? new Date(typedPost.createdAt).toISOString() : 
+                       new Date().toISOString()}
+        modifiedDate={typedPost.updatedAt ? new Date(typedPost.updatedAt).toISOString() : 
+                      typedPost.createdAt ? new Date(typedPost.createdAt).toISOString() : 
+                      new Date().toISOString()}
+        keywords={typedPost.keywords || []}
+        category={typedPost.category}
+      />
+      <BreadcrumbStructuredData
+        items={[
+          { name: "Home", url: siteUrl },
+          { name: "Blog", url: `${siteUrl}/#blog` },
+          { name: typedPost.title, url: postUrl }
+        ]}
+      />
       <Navigation />
       
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Breadcrumb Navigation */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <Breadcrumb
+          items={[
+            { name: "Blog", href: "/#blog" },
+            { name: typedPost.category, href: `/?category=${typedPost.category.toLowerCase()}` },
+            { name: typedPost.title, current: true }
+          ]}
+        />
+      </div>
+      
+      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           {/* Featured Image */}
           <div className="w-full h-64 bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
@@ -126,30 +191,11 @@ export default function Post() {
               </div>
 
               {/* Social Sharing */}
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-500 mr-2">Share:</span>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`, '_blank')}
-                >
-                  <Twitter className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank')}
-                >
-                  <Facebook className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank')}
-                >
-                  <Linkedin className="w-4 h-4" />
-                </Button>
-              </div>
+              <SocialSharing
+                url={shareUrl}
+                title={shareTitle}
+                description={typedPost.metaDescription || typedPost.excerpt}
+              />
             </div>
 
             {/* Article Excerpt */}

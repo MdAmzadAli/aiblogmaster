@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Eye, Calendar, User } from "lucide-react";
+import { SEOHead } from "@/components/seo-head";
+import { WebsiteStructuredData } from "@/components/structured-data";
 import type { Post } from "@shared/schema";
 
 const categories = [
@@ -53,6 +55,18 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEOHead
+        title="AI Blog Platform - Automated SEO-Optimized Content Generation"
+        description="Transform your content strategy with AI-powered blog automation. Generate SEO-optimized articles, track performance analytics, and boost your search rankings with our intelligent content platform."
+        keywords={["AI blog", "SEO optimization", "content generation", "automated blogging", "artificial intelligence", "content marketing", "blog automation", "SEO tools"]}
+        url="/"
+        type="website"
+      />
+      <WebsiteStructuredData
+        siteName="AI Blog Platform"
+        siteUrl={typeof window !== 'undefined' ? window.location.origin : ''}
+        description="AI-powered blog platform with automated SEO optimization and content generation"
+      />
       <Navigation />
       
       {!searchQuery && <HeroSection />}

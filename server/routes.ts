@@ -10,6 +10,7 @@ import {
   createOptimizedPost 
 } from "./services/gemini";
 import { insertPostSchema, insertAutomationSettingsSchema } from "@shared/schema";
+import { registerSitemapRoutes } from "./routes/sitemap";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize authentication
@@ -17,6 +18,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize automated posting scheduler
   await blogScheduler.initializeScheduler();
+
+  // Register SEO routes (sitemap, robots.txt)
+  registerSitemapRoutes(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -57,6 +61,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching featured post:", error);
       res.status(500).json({ message: "Failed to fetch featured post" });
+    }
+  });
+
+  // View tracking route
+  app.post("/api/posts/:slug/view", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const { postId } = req.body;
+      
+      if (!postId) {
+        return res.status(400).json({ message: "Post ID is required" });
+      }
+      
+      await storage.incrementPostViews(postId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking view:", error);
+      res.status(500).json({ message: "Failed to track view" });
     }
   });
 
