@@ -21,6 +21,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize automated posting scheduler
   await blogScheduler.initializeScheduler();
 
+  // Add cache headers for main pages
+  app.use('/', (req, res, next) => {
+    if (req.path === '/' || req.path === '/blog') {
+      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
+    }
+    next();
+  });
+
   // Register SEO routes (sitemap, robots.txt)
   registerSitemapRoutes(app);
 
@@ -79,6 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (ssrHtml) {
           res.setHeader('Content-Type', 'text/html');
+          res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
           res.setHeader('X-Static-Generation', 'false');
           res.send(ssrHtml);
         } else {
@@ -118,6 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
       
+      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
       res.json(filteredPosts);
     } catch (error) {
       console.error("Error fetching posts:", error);
@@ -128,6 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/posts/featured", async (req, res) => {
     try {
       const featuredPost = await storage.getFeaturedPost();
+      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
       res.json(featuredPost);
     } catch (error) {
       console.error("Error fetching featured post:", error);

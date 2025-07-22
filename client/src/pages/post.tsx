@@ -94,11 +94,12 @@ export default function Post() {
     <div className="min-h-screen bg-gray-50">
       <ReadingProgress />
       <SEOHead
-        title={typedPost.title}
+        title={typedPost.title.length > 55 ? typedPost.title.substring(0, 52) + '...' : typedPost.title}
         description={typedPost.metaDescription || typedPost.excerpt}
         keywords={typedPost.keywords || []}
         image={imageUrl}
         url={`/post/${typedPost.slug}`}
+        canonicalUrl={postUrl}
         type="article"
         author={typedPost.isAiGenerated ? "AI Assistant" : "Human Author"}
         publishedTime={typedPost.publishedAt ? new Date(typedPost.publishedAt).toISOString() : 
@@ -109,7 +110,6 @@ export default function Post() {
                      new Date().toISOString()}
         section={typedPost.category}
         tags={typedPost.keywords || []}
-        canonicalUrl={postUrl}
       />
       <ArticleStructuredData
         title={typedPost.title}

@@ -56,10 +56,11 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-gray-50">
       <SEOHead
-        title="AI Blog Platform - Automated SEO-Optimized Content Generation"
-        description="Transform your content strategy with AI-powered blog automation. Generate SEO-optimized articles, track performance analytics, and boost your search rankings with our intelligent content platform."
+        title="AI Blog Platform - Smart SEO Content Generation"
+        description="Transform your content strategy with AI-powered blog automation. Generate SEO-optimized articles, track performance analytics, and boost your search rankings with our intelligent content platform designed for modern marketers and content creators. Get started today!"
         keywords={["AI blog", "SEO optimization", "content generation", "automated blogging", "artificial intelligence", "content marketing", "blog automation", "SEO tools"]}
-        url="/"
+        url={typeof window !== 'undefined' && window.location.pathname === '/blog' ? "/blog" : "/"}
+        canonicalUrl={typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname === '/blog' ? '/blog' : '/'}` : undefined}
         type="website"
       />
       <WebsiteStructuredData
@@ -155,9 +156,16 @@ export default function Landing() {
       {/* Search and Filters */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">
-            {searchQuery ? `Search Results for "${searchQuery}"` : "Latest Posts"}
-          </h2>
+          <div>
+            {!searchQuery && !featuredPost && (
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Latest AI-Generated Content
+              </h1>
+            )}
+            <h2 className="text-2xl font-semibold text-gray-700">
+              {searchQuery ? `Search Results for "${searchQuery}"` : "Discover Our Latest SEO-Optimized Articles"}
+            </h2>
+          </div>
           
           <div className="flex items-center space-x-4">
             <div className="relative">
