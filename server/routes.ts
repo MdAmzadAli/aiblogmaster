@@ -23,38 +23,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register SEO routes (sitemap, robots.txt)
   registerSitemapRoutes(app);
 
-  // Server-side rendering for SEO
-  app.get('/post/:slug', async (req, res, next) => {
-    try {
-      const { slug } = req.params;
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      const ssrHtml = await generatePostSSR(slug, baseUrl);
-      
-      if (ssrHtml) {
-        res.setHeader('Content-Type', 'text/html');
-        res.send(ssrHtml);
-      } else {
-        // Fall back to SPA routing
+  // Server-side rendering for SEO (only in production)
+  if (process.env.NODE_ENV === 'production') {
+    app.get('/post/:slug', async (req, res, next) => {
+      try {
+        const { slug } = req.params;
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const ssrHtml = await generatePostSSR(slug, baseUrl);
+        
+        if (ssrHtml) {
+          res.setHeader('Content-Type', 'text/html');
+          res.send(ssrHtml);
+        } else {
+          // Fall back to SPA routing
+          next();
+        }
+      } catch (error) {
+        console.error('SSR error:', error);
         next();
       }
-    } catch (error) {
-      console.error('SSR error:', error);
-      next();
-    }
-  });
+    });
 
-  app.get('/', async (req, res, next) => {
-    try {
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      const ssrHtml = await generateHomeSSR(baseUrl);
-      
-      res.setHeader('Content-Type', 'text/html');
-      res.send(ssrHtml);
-    } catch (error) {
-      console.error('SSR error:', error);
-      next();
-    }
-  });
+    app.get('/', async (req, res, next) => {
+      try {
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const ssrHtml = await generateHomeSSR(baseUrl);
+        
+        res.setHeader('Content-Type', 'text/html');
+        res.send(ssrHtml);
+      } catch (error) {
+        console.error('SSR error:', error);
+        next();
+      }
+    });
+  }
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
