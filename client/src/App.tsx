@@ -16,8 +16,7 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/home" component={Home} />
+      <Route path="/" component={isAuthenticated ? Home : Landing} />
       <Route path="/admin" nest component={AdminLayout} />
       <Route path="/post-editor" component={PostEditor} />
       <Route path="/post-editor/:id" component={PostEditor} />
