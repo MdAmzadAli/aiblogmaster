@@ -254,8 +254,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
     // Extract unique categories
     const categories = [...new Set(posts.map((post: Post) => post.category))].filter(Boolean)
     
-    const paths = categories.map((category: string) => ({
-      params: { category: category.toLowerCase() }
+    const paths = categories.map((category) => ({
+      params: { category: String(category).toLowerCase() }
     }))
 
     return {

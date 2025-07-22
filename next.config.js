@@ -1,8 +1,5 @@
 // @ts-check
 const nextConfig = {
-  experimental: {
-    appDir: false // Using pages directory for better SEO control
-  },
   images: {
     domains: ['localhost', 'res.cloudinary.com', 'images.unsplash.com'],
     formats: ['image/webp', 'image/avif'],
