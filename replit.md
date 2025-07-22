@@ -21,11 +21,12 @@ The application follows a monorepo structure with separate client and server dir
 ## Key Components
 
 ### Frontend Architecture
-- **Framework**: React 18 with TypeScript
-- **Routing**: Wouter for lightweight client-side routing
+- **Framework**: Next.js 14 with React 18 and TypeScript
+- **Routing**: Next.js App Router with static and server-side rendering
 - **State Management**: TanStack Query (React Query) for server state
 - **UI Framework**: Tailwind CSS with Radix UI components (shadcn/ui)
-- **Build Tool**: Vite for fast development and optimized builds
+- **Image Optimization**: Next.js Image component with lazy loading and WebP conversion
+- **SEO**: Advanced SEO optimization with structured data, meta tags, and sitemaps
 
 ### Backend Architecture
 - **Framework**: Express.js with TypeScript
@@ -177,3 +178,14 @@ The platform is designed to be self-maintaining through AI automation while prov
 - ✓ **Foreign Key Handling**: Post deletion properly cascades to remove approval tokens
 - ✓ **Pagination**: Clean pagination with page numbers, previous/next buttons, and post count display
 - ✓ **Action Buttons**: Edit (opens post editor), View (opens published posts in new tab), Delete (with confirmation dialog)
+
+### Next.js Conversion (January 22, 2025)
+- ✓ **Framework Migration**: Converted entire frontend from React SPA to Next.js with SSR/SSG
+- ✓ **SEO Optimization**: Implemented comprehensive SEO with structured data, meta tags, and Open Graph
+- ✓ **Performance**: Added static generation (getStaticProps), server-side rendering (getServerSideProps)
+- ✓ **Image Optimization**: Next.js Image component with lazy loading and automatic format optimization
+- ✓ **Routing**: File-based routing with dynamic routes for posts and categories
+- ✓ **Static Assets**: Automated sitemap.xml and robots.txt generation
+- ✓ **Error Pages**: Custom 404 and 500 error pages with proper SEO
+- ✓ **Category Pages**: Dynamic category pages with static generation
+- ✓ **Blog Listing**: Optimized blog listing with pagination and filtering
