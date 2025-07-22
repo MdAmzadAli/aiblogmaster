@@ -1,7 +1,6 @@
 import Head from 'next/head'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { GetServerSideProps } from 'next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,30 +22,18 @@ interface Post {
   seoScore: number
 }
 
-interface AdminPageProps {
-  initialPosts: Post[]
-}
-
-export default function AdminPage({ initialPosts }: AdminPageProps) {
+export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('overview')
-  const [mounted, setMounted] = useState(false)
   
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const { data: posts = initialPosts, isLoading } = useQuery({
+  const { data: posts = [], isLoading } = useQuery({
     queryKey: ['/api/admin/posts'],
-    queryFn: () => fetch('/api/admin/posts').then(res => res.json()),
-    initialData: initialPosts,
-    enabled: mounted
+    queryFn: () => fetch('/api/admin/posts').then(res => res.json())
   })
 
   const { data: analytics } = useQuery({
     queryKey: ['/api/admin/analytics'],
     queryFn: () => fetch('/api/admin/analytics').then(res => res.json()),
-    retry: false,
-    enabled: mounted
+    retry: false
   })
 
   const publishedPosts = posts.filter((p: Post) => p.status === 'published')
@@ -277,25 +264,4 @@ export default function AdminPage({ initialPosts }: AdminPageProps) {
       </div>
     </>
   )
-}
-
-export const getServerSideProps: GetServerSideProps = async () => {
-  try {
-    // Get initial posts data on server-side
-    const postsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/posts`)
-    const initialPosts = await postsRes.json()
-    
-    return {
-      props: {
-        initialPosts: initialPosts || []
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching initial data:', error)
-    return {
-      props: {
-        initialPosts: []
-      }
-    }
-  }
 }

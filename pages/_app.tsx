@@ -7,9 +7,8 @@ export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 5 * 60 * 1000,
+        staleTime: 5 * 60 * 1000, // 5 minutes
         refetchOnWindowFocus: false,
-        retry: false, // Disable retry for SSR
       },
     },
   }))
