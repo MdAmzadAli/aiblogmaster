@@ -1,6 +1,7 @@
 import Head from 'next/head'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
+import { GetServerSideProps } from 'next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -22,18 +23,30 @@ interface Post {
   seoScore: number
 }
 
-export default function AdminPage() {
+interface AdminPageProps {
+  initialPosts: Post[]
+}
+
+export default function AdminPage({ initialPosts }: AdminPageProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [mounted, setMounted] = useState(false)
   
-  const { data: posts = [], isLoading } = useQuery({
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const { data: posts = initialPosts, isLoading } = useQuery({
     queryKey: ['/api/admin/posts'],
-    queryFn: () => fetch('/api/admin/posts').then(res => res.json())
+    queryFn: () => fetch('/api/admin/posts').then(res => res.json()),
+    initialData: initialPosts,
+    enabled: mounted
   })
 
   const { data: analytics } = useQuery({
     queryKey: ['/api/admin/analytics'],
     queryFn: () => fetch('/api/admin/analytics').then(res => res.json()),
-    retry: false
+    retry: false,
+    enabled: mounted
   })
 
   const publishedPosts = posts.filter((p: Post) => p.status === 'published')
@@ -264,4 +277,25 @@ export default function AdminPage() {
       </div>
     </>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  try {
+    // Get initial posts data on server-side
+    const postsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/posts`)
+    const initialPosts = await postsRes.json()
+    
+    return {
+      props: {
+        initialPosts: initialPosts || []
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching initial data:', error)
+    return {
+      props: {
+        initialPosts: []
+      }
+    }
+  }
 }
