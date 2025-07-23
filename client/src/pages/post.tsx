@@ -25,22 +25,22 @@ export default function Post() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <Skeleton className="w-full h-64" />
-            <div className="p-8">
-              <div className="flex items-center mb-4">
-                <Skeleton className="h-6 w-20 rounded-full" />
-                <Skeleton className="ml-4 h-4 w-32" />
+            <Skeleton className="w-full h-48 sm:h-64" />
+            <div className="p-4 sm:p-6 lg:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center mb-4 gap-2 sm:gap-0">
+                <Skeleton className="h-5 sm:h-6 w-20 rounded-full" />
+                <Skeleton className="sm:ml-4 h-3 sm:h-4 w-32" />
               </div>
-              <Skeleton className="h-10 w-full mb-4" />
-              <Skeleton className="h-6 w-3/4 mb-8" />
+              <Skeleton className="h-8 sm:h-10 w-full mb-3 sm:mb-4" />
+              <Skeleton className="h-5 sm:h-6 w-3/4 mb-6 sm:mb-8" />
               
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="mb-4">
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-5/6 mb-2" />
-                  <Skeleton className="h-4 w-4/5" />
+                <div key={i} className="mb-3 sm:mb-4">
+                  <Skeleton className="h-3 sm:h-4 w-full mb-2" />
+                  <Skeleton className="h-3 sm:h-4 w-5/6 mb-2" />
+                  <Skeleton className="h-3 sm:h-4 w-4/5" />
                 </div>
               ))}
             </div>
@@ -54,11 +54,11 @@ export default function Post() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Post Not Found</h1>
-            <p className="text-gray-600 mb-8">The post you're looking for doesn't exist or has been moved.</p>
-            <Button onClick={() => window.history.back()}>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Post Not Found</h1>
+            <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">The post you're looking for doesn't exist or has been moved.</p>
+            <Button onClick={() => window.history.back()} className="w-full sm:w-auto">
               Go Back
             </Button>
           </div>
@@ -136,7 +136,7 @@ export default function Post() {
       <Navigation />
       
       {/* Breadcrumb Navigation */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4">
         <Breadcrumb
           items={[
             { name: "Blog", href: "/#blog" },
@@ -146,18 +146,18 @@ export default function Post() {
         />
       </div>
       
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           {/* Featured Image */}
-          <div className="w-full h-64 bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
-            <div className="text-center text-white">
-              <h1 className="text-4xl font-bold mb-4 px-8">{typedPost.title}</h1>
-              <div className="flex items-center justify-center space-x-4 text-blue-100">
-                <Badge className={`category-badge ${getCategoryColor(typedPost.category)}`}>
+          <div className="w-full h-48 sm:h-56 md:h-64 bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+            <div className="text-center text-white px-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 leading-tight">{typedPost.title}</h1>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-blue-100">
+                <Badge className={`category-badge ${getCategoryColor(typedPost.category)} text-xs sm:text-sm`}>
                   {typedPost.category}
                 </Badge>
-                <span className="flex items-center">
-                  <Clock className="w-4 h-4 mr-1" />
+                <span className="flex items-center text-xs sm:text-sm">
+                  <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                   {readingTime} min read
                 </span>
               </div>
@@ -165,32 +165,48 @@ export default function Post() {
           </div>
 
           {/* Article Content */}
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             {/* Article Meta */}
-            <div className="flex flex-wrap items-center justify-between mb-8 pb-6 border-b border-gray-200">
-              <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-gray-200 gap-4 sm:gap-0">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <div className="ai-avatar">
-                  <User className="w-5 h-5" />
+                  <User className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-gray-900 text-sm sm:text-base">
                     {typedPost.isAiGenerated ? "AI Assistant" : "Human Author"}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    {typedPost.isAiGenerated ? "Powered by Gemini" : "Content Creator"}
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    {typedPost.isAiGenerated ? "Powered by Gemini AI" : "Human Written"}
                   </p>
                 </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Calendar className="w-4 h-4 mr-1" />
-                  {publishedDate.toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </div>
               </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-gray-500">
+                <div className="flex items-center">
+                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                  <span className="text-xs sm:text-sm">
+                    {publishedDate.toLocaleDateString('en-US', { 
+                      year: 'numeric',
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                  <span className="text-xs sm:text-sm">{typedPost.totalViews || 0} views</span>
+                </div>
+                {typedPost.seoScore && (
+                  <div className="flex items-center">
+                    <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                    <span className="text-xs sm:text-sm">SEO: {typedPost.seoScore}/100</span>
+                  </div>
+                )}
+              </div>
+            </div>
 
-              {/* Social Sharing */}
+            {/* Social Sharing */}
+            <div className="mb-6 sm:mb-8">
               <SocialSharing
                 url={shareUrl}
                 title={shareTitle}
@@ -199,25 +215,25 @@ export default function Post() {
             </div>
 
             {/* Article Excerpt */}
-            <div className="mb-8">
-              <p className="text-xl text-gray-600 leading-relaxed font-light">
+            <div className="mb-6 sm:mb-8">
+              <p className="text-lg sm:text-xl text-gray-600 leading-relaxed font-light">
                 {typedPost.excerpt}
               </p>
             </div>
 
             {/* Article Content */}
             <div 
-              className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900"
+              className="prose prose-sm sm:prose-base lg:prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-blue-600 prose-strong:text-gray-900 prose-ul:text-gray-700 prose-ol:text-gray-700"
               dangerouslySetInnerHTML={{ __html: typedPost.content }}
             />
 
             {/* Keywords */}
             {typedPost.keywords && typedPost.keywords.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Tags:</h3>
+              <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
+                <h3 className="text-sm sm:text-base font-medium text-gray-900 mb-3">Tags:</h3>
                 <div className="flex flex-wrap gap-2">
                   {typedPost.keywords.map((keyword, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
+                    <Badge key={index} variant="secondary" className="text-xs sm:text-sm">
                       {keyword}
                     </Badge>
                   ))}
@@ -227,17 +243,17 @@ export default function Post() {
 
             {/* SEO Score */}
             {typedPost.seoScore && (
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">SEO Score:</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">SEO Score:</span>
                   <div className="flex items-center">
-                    <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                    <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-2 mr-2">
                       <div 
                         className="bg-emerald-500 h-2 rounded-full" 
                         style={{ width: `${typedPost.seoScore}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm font-bold text-emerald-600">{typedPost.seoScore}/100</span>
+                    <span className="text-xs sm:text-sm font-bold text-emerald-600">{typedPost.seoScore}/100</span>
                   </div>
                 </div>
               </div>

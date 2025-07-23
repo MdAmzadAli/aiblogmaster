@@ -31,20 +31,20 @@ export default function Home() {
       <Navigation />
       
       {/* Welcome Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-2xl shadow-sm p-8 mb-8">
-          <div className="flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                 Welcome back, Admin!
               </h1>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 Manage your AI-powered blog platform and monitor performance.
               </p>
             </div>
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
               <Link href="/automation">
-                <Button>
+                <Button className="w-full sm:w-auto text-sm">
                   <Settings className="w-4 h-4 mr-2" />
                   Automation Dashboard
                 </Button>
@@ -54,16 +54,16 @@ export default function Home() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {analyticsLoading ? (
             [...Array(4)].map((_, i) => (
               <Card key={i}>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center">
-                    <Skeleton className="w-12 h-12 rounded-lg" />
-                    <div className="ml-4 flex-1">
-                      <Skeleton className="h-4 w-20 mb-2" />
-                      <Skeleton className="h-8 w-16" />
+                    <Skeleton className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg" />
+                    <div className="ml-3 sm:ml-4 flex-1">
+                      <Skeleton className="h-3 sm:h-4 w-20 mb-2" />
+                      <Skeleton className="h-6 sm:h-8 w-16" />
                     </div>
                   </div>
                 </CardContent>

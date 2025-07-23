@@ -42,43 +42,43 @@ export default function BlogCard({ post, compact = false }: BlogCardProps) {
       <img 
         src={post.featuredImage || getImageUrl(post.category)} 
         alt={post.title}
-        className={`w-full ${compact ? 'h-32' : 'h-48'} object-cover`}
+        className={`w-full ${compact ? 'h-24 sm:h-32' : 'h-40 sm:h-48'} object-cover`}
       />
-      <div className={`${compact ? 'p-4' : 'p-6'}`}>
-        <div className="flex items-center mb-3">
-          <Badge className={`category-badge ${getCategoryColor(post.category)}`}>
+      <div className={`${compact ? 'p-3 sm:p-4' : 'p-4 sm:p-6'}`}>
+        <div className="flex flex-col sm:flex-row sm:items-center mb-3 gap-2 sm:gap-0">
+          <Badge className={`category-badge ${getCategoryColor(post.category)} text-xs sm:text-sm w-fit`}>
             {post.category}
           </Badge>
-          <span className={`ml-3 text-gray-500 ${compact ? 'text-xs' : 'text-sm'} flex items-center`}>
+          <span className={`sm:ml-3 text-gray-500 ${compact ? 'text-xs' : 'text-xs sm:text-sm'} flex items-center`}>
             <Clock className="w-3 h-3 mr-1" />
             {readingTime} min read
           </span>
         </div>
         
-        <h3 className={`${compact ? 'text-lg' : 'text-xl'} font-semibold text-gray-900 mb-3 hover:text-blue-600 cursor-pointer line-clamp-2`}>
+        <h3 className={`${compact ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'} font-semibold text-gray-900 mb-2 sm:mb-3 hover:text-blue-600 cursor-pointer line-clamp-2 leading-tight`}>
           <Link href={`/post/${post.slug}`}>
             {post.title}
           </Link>
         </h3>
         
-        <p className={`text-gray-600 mb-4 ${compact ? 'text-sm line-clamp-2' : 'line-clamp-3'}`}>
+        <p className={`text-gray-600 mb-3 sm:mb-4 ${compact ? 'text-xs sm:text-sm line-clamp-2' : 'text-sm sm:text-base line-clamp-3'} leading-relaxed`}>
           {post.excerpt}
         </p>
         
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
           <div className="flex items-center">
             <div className="ai-avatar">
-              <User className="w-4 h-4" />
+              <User className="w-3 h-3 sm:w-4 sm:h-4" />
             </div>
             <div className="ml-2">
-              <span className={`${compact ? 'text-xs' : 'text-sm'} text-gray-500`}>
+              <span className={`${compact ? 'text-xs' : 'text-xs sm:text-sm'} text-gray-500`}>
                 {post.isAiGenerated ? "AI Writer" : "Human Author"}
               </span>
             </div>
           </div>
           <div className="flex items-center text-gray-500">
             <Calendar className="w-3 h-3 mr-1" />
-            <span className={`${compact ? 'text-xs' : 'text-sm'}`}>
+            <span className={`${compact ? 'text-xs' : 'text-xs sm:text-sm'}`}>
               {publishedDate.toLocaleDateString('en-US', { 
                 month: 'short', 
                 day: 'numeric' 
@@ -88,9 +88,9 @@ export default function BlogCard({ post, compact = false }: BlogCardProps) {
         </div>
 
         {!compact && (
-          <div className="mt-4">
+          <div className="mt-3 sm:mt-4">
             <Link href={`/post/${post.slug}`}>
-              <Button variant="ghost" className="text-blue-600 hover:text-blue-800 p-0">
+              <Button variant="ghost" className="text-blue-600 hover:text-blue-800 p-0 text-sm sm:text-base">
                 Read More →
               </Button>
             </Link>

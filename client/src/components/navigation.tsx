@@ -59,7 +59,7 @@ export default function Navigation() {
                   placeholder="Search posts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 pl-10 pr-4"
+                  className="w-48 lg:w-64 pl-10 pr-4 text-sm"
                 />
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               </div>
@@ -68,9 +68,9 @@ export default function Navigation() {
             {/* Show Admin button only for authenticated users */}
             {isAuthenticated && (
               <Link href="/admin">
-                <Button className="bg-blue-600 text-white hover:bg-blue-700 transition-colors">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Admin
+                <Button className="bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm">
+                  <Settings className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Admin</span>
                 </Button>
               </Link>
             )}
