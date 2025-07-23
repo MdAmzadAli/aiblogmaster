@@ -4,7 +4,7 @@ import Navigation from "@/components/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, Eye, User } from "lucide-react";
+import { Calendar, Clock, Eye, User, BarChart3 } from "lucide-react";
 import { SEOHead } from "@/components/seo-head";
 import { ArticleStructuredData, BreadcrumbStructuredData } from "@/components/structured-data";
 import { SocialSharing } from "@/components/social-sharing";
@@ -67,12 +67,14 @@ export default function Post() {
     );
   }
 
+  // Track page view for analytics - must be called unconditionally for hooks rules
+  useViewTracker((post as PostType)?.id || 0, (post as PostType)?.slug || '');
+
+  if (!post) return null; // Already handled above but needed for TypeScript
+
   const typedPost = post as PostType;
   const publishedDate = typedPost.publishedAt ? new Date(typedPost.publishedAt) : new Date();
   const readingTime = Math.ceil(typedPost.content.length / 1000); // Rough estimate
-
-  // Track page view for analytics
-  useViewTracker(typedPost.id, typedPost.slug);
 
   const getCategoryColor = (category: string) => {
     const lowerCategory = category.toLowerCase();
@@ -194,7 +196,7 @@ export default function Post() {
                 </div>
                 <div className="flex items-center">
                   <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                  <span className="text-xs sm:text-sm">{typedPost.totalViews || 0} views</span>
+                  <span className="text-xs sm:text-sm">{(typedPost as any).totalViews || 0} views</span>
                 </div>
                 {typedPost.seoScore && (
                   <div className="flex items-center">

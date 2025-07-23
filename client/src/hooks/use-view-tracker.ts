@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 
 export function useViewTracker(postId: number, slug: string) {
   useEffect(() => {
+    // Don't track if no valid post data
+    if (!postId || !slug) return;
+
     // Track page view
     const trackView = async () => {
       try {
