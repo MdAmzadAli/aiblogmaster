@@ -275,6 +275,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = Number(req.params.id);
       const validatedData = insertPostSchema.partial().parse(req.body);
       
+      // Check if post is being published (status changing to published)
+      const existingPost = await storage.getPost(id);
+      const isBeingPublished = validatedData.status === "published" && existingPost?.status !== "published";
+      
       // Ensure database constraints are respected
       if (validatedData.metaDescription && validatedData.metaDescription.length > 160) {
         validatedData.metaDescription = validatedData.metaDescription.substring(0, 157) + "...";
@@ -286,6 +290,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const post = await storage.updatePost(id, validatedData);
+      
+      // Auto-generate static content when post is published
+      if (isBeingPublished) {
+        // Don't await this to avoid slowing down the API response
+        staticGenerator.onPostPublished(id).catch(error => {
+          console.error('Failed to auto-generate static content:', error);
+        });
+      }
+      
       res.json(post);
     } catch (error) {
       console.error("Error updating post:", error);

@@ -3,6 +3,7 @@ import { db } from '../db';
 import { approvalTokens, posts } from '@shared/schema';
 import { eq, and, gte } from 'drizzle-orm';
 import { sendPostApprovalEmail } from './email';
+import { staticGenerator } from '../staticGeneration';
 import type { Post } from '@shared/schema';
 
 export async function createApprovalToken(postId: number): Promise<string> {
@@ -62,6 +63,14 @@ export async function approveAndPublishPost(postId: number, token: string): Prom
 
   // Clean up used token
   await db.delete(approvalTokens).where(eq(approvalTokens.token, token));
+
+  // Auto-generate static content for the newly published post
+  if (updatedPost) {
+    // Don't await this to avoid slowing down the approval process
+    staticGenerator.onPostPublished(postId).catch(error => {
+      console.error('Failed to auto-generate static content after approval:', error);
+    });
+  }
 
   return updatedPost || null;
 }

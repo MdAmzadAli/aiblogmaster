@@ -341,6 +341,67 @@ export class StaticSiteGenerator {
       return null;
     }
   }
+
+  // Generate static page for a single post (incremental generation)
+  async generateSinglePost(postId: number): Promise<{ success: boolean; slug?: string; error?: string }> {
+    try {
+      const post = await storage.getPost(postId);
+      
+      if (!post || post.status !== 'published') {
+        return { success: false, error: 'Post not found or not published' };
+      }
+
+      // Generate the static HTML
+      const postHTML = await this.generatePostHTML(post);
+      const postPath = join(this.distPath, `post-${post.slug}.html`);
+      writeFileSync(postPath, postHTML, 'utf8');
+      
+      console.log(`✅ Generated static page: /post/${post.slug}`);
+      return { success: true, slug: post.slug };
+    } catch (error) {
+      console.error('Error generating single post:', error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  // Regenerate blog listing page (when new posts are published)
+  async regenerateBlogListing(): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { props } = await this.getStaticProps();
+      if (props.posts) {
+        const blogHTML = await this.generateBlogListHTML(props.posts);
+        const blogPath = join(this.distPath, 'blog.html');
+        writeFileSync(blogPath, blogHTML, 'utf8');
+        console.log(`✅ Regenerated blog listing page`);
+        return { success: true };
+      }
+      return { success: false, error: 'No posts found' };
+    } catch (error) {
+      console.error('Error regenerating blog listing:', error);
+      return { success: false, error: String(error) };
+    }
+  }
+
+  // Auto-generate static content when post is published
+  async onPostPublished(postId: number): Promise<void> {
+    try {
+      console.log(`🔄 Auto-generating static content for post ID: ${postId}`);
+      
+      // Generate static page for the new post
+      const postResult = await this.generateSinglePost(postId);
+      
+      // Regenerate blog listing to include the new post
+      const listingResult = await this.regenerateBlogListing();
+      
+      if (postResult.success && listingResult.success) {
+        console.log(`🎉 Auto-generated static content successfully for post: ${postResult.slug}`);
+      } else {
+        console.error(`❌ Auto-generation failed:`, { postResult, listingResult });
+      }
+    } catch (error) {
+      console.error('Error in auto-generation:', error);
+    }
+  }
 }
 
 export const staticGenerator = new StaticSiteGenerator();
