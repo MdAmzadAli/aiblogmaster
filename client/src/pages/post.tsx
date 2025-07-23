@@ -21,6 +21,13 @@ export default function Post() {
     enabled: !!slug,
   });
 
+  // Track page view for analytics - MUST be called unconditionally for React hooks rules
+  // Only track when we have valid post data (not during loading or error states)
+  useViewTracker(
+    post && !isLoading && !error ? (post as PostType).id : 0,
+    post && !isLoading && !error ? (post as PostType).slug : ''
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -66,9 +73,6 @@ export default function Post() {
       </div>
     );
   }
-
-  // Track page view for analytics - must be called unconditionally for hooks rules
-  useViewTracker((post as PostType)?.id || 0, (post as PostType)?.slug || '');
 
   if (!post) return null; // Already handled above but needed for TypeScript
 
