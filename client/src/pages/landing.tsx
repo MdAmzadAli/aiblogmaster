@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import Navigation from "@/components/navigation";
@@ -7,7 +7,7 @@ import BlogCard from "@/components/blog-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Eye, Calendar, User } from "lucide-react";
+import { Search, Eye, Calendar, User, ChevronDown, ChevronUp } from "lucide-react";
 import { SEOHead } from "@/components/seo-head";
 import { WebsiteStructuredData } from "@/components/structured-data";
 import type { Post } from "@shared/schema";
@@ -15,13 +15,39 @@ import type { Post } from "@shared/schema";
 const categories = [
   { id: "all", name: "All", active: true },
   { id: "seo", name: "SEO", active: false },
-  { id: "ai", name: "AI", active: false },
-  { id: "marketing", name: "Marketing", active: false },
+  { id: "ai", name: "AI & Machine Learning", active: false },
+  { id: "marketing", name: "Digital Marketing", active: false },
+  { id: "web-development", name: "Web Development", active: false },
+  { id: "mobile-development", name: "Mobile Development", active: false },
+  { id: "cloud-computing", name: "Cloud Computing", active: false },
+  { id: "cybersecurity", name: "Cybersecurity", active: false },
+  { id: "data-science", name: "Data Science", active: false },
+  { id: "blockchain", name: "Blockchain", active: false },
+  { id: "iot", name: "Internet of Things", active: false },
+  { id: "devops", name: "DevOps", active: false },
+  { id: "software-engineering", name: "Software Engineering", active: false },
+  { id: "ui-ux", name: "UI/UX Design", active: false },
+  { id: "automation", name: "Automation", active: false },
+  { id: "analytics", name: "Analytics", active: false },
+  { id: "programming", name: "Programming", active: false },
+  { id: "databases", name: "Databases", active: false },
+  { id: "api-development", name: "API Development", active: false },
+  { id: "tech-trends", name: "Tech Trends", active: false },
 ];
 
 export default function Landing() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAllCategories, setShowAllCategories] = useState(false);
+
+  // Handle URL search parameter
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+  }, []);
 
   const { data: featuredPost, isLoading: featuredLoading } = useQuery<Post | undefined>({
     queryKey: ["/api/posts/featured"],
@@ -38,6 +64,7 @@ export default function Landing() {
       if (!response.ok) throw new Error('Failed to fetch posts');
       return response.json();
     },
+    enabled: !searchQuery, // Don't fetch category posts when searching
   });
 
   const { data: searchResults = [], isLoading: searchLoading } = useQuery<Post[]>({
@@ -179,23 +206,57 @@ export default function Landing() {
                   className="w-full pl-10 pr-4"
                 />
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
             </div>
             
             {/* Category Filters */}
             {!searchQuery && (
-              <div className="flex flex-wrap justify-center lg:justify-start gap-2">
-                {categories.map((category) => (
-                  <Button
-                    key={category.id}
-                    variant={selectedCategory === category.id ? "default" : "secondary"}
-                    size="sm"
-                    onClick={() => setSelectedCategory(category.id)}
-                    className="text-xs sm:text-sm"
-                  >
-                    {category.name}
-                  </Button>
-                ))}
+              <div className="space-y-4">
+                <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+                  {(showAllCategories ? categories : categories.slice(0, 8)).map((category) => (
+                    <Button
+                      key={category.id}
+                      variant={selectedCategory === category.id ? "default" : "secondary"}
+                      size="sm"
+                      onClick={() => setSelectedCategory(category.id)}
+                      className="text-xs sm:text-sm transition-all duration-200 hover:scale-105"
+                    >
+                      {category.name}
+                    </Button>
+                  ))}
+                </div>
+                
+                {/* Show More/Less Button */}
+                {categories.length > 8 && (
+                  <div className="flex justify-center lg:justify-start">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAllCategories(!showAllCategories)}
+                      className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                    >
+                      {showAllCategories ? (
+                        <>
+                          <ChevronUp className="w-4 h-4" />
+                          Show Less Categories
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4" />
+                          Show More Categories ({categories.length - 8} more)
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>
